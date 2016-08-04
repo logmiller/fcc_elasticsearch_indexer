@@ -1,0 +1,221 @@
+<?php
+
+# Declare Constants
+//define( 'DEFAULT_CLUSTER_ID', 'elasticsearch_rveitch' );
+define( 'DEFAULT_CLUSTER_ID', 'elasticsearch' );
+define( 'ES_NODE_ID', 'inforum' );
+// const PC_LIBRARY_PATH = 'sites/all/libraries/php-console/src/PhpConsole';
+//pc($variable, $label = ' ');
+
+/**
+ * Prepares a node to b`e added to elastic
+ *
+ * @param $node
+ * @return array
+ */
+function _fcc_elasticsearch_indexer_prepare_node( $node ) {
+
+	if ( ! is_object( $node ) ) {
+		return;
+	}
+
+	pc_init_pc();
+	pc( $node, '$node' );
+
+	$params = array(
+		'index' => ES_NODE_ID, // TODO make dynamic for property name
+		'type' => $node->type,
+		'body' => array(),
+	);
+
+	// Add the simple properties
+	$wanted = array( 'nid', 'title', 'name', 'uid', 'log', 'status', 'comment', 'promote', 'sticky', 'type', 'language', 'vid', 'created', 'changed', 'revision_timestamp', 'revision_uid' );
+	$exist = array_filter( $wanted, function( $property ) use ( $node ) {
+		return property_exists( $node, $property );
+	});
+	foreach ( $exist as $field ) {
+		$params['body'][ $field ] = $node->{$field};
+	}
+
+	// Add the image field if exists
+	if ( $node->created ) {
+		$time = date( 'Y-m-d', $node->created );
+		$params['body']['publish_date'] = $node->created;
+		//pc_init_pc();
+		//pc( $params, '$params' );
+	}
+
+	// TODO add author (from UID?)
+	//profile_load_profile($user->uid);
+	//$user->profile_fullname;
+	// bio
+	/*
+	post_author: {
+		raw: "tomcherveny",
+		login: "tomcherveny",
+		display_name: "Tom Cherveny",
+		id: 32172
+	}
+	*/
+
+	// TODO Publish Date - post_date: "2016-08-03 15:18:29" (post_date)
+	/* date terms?
+	date_terms: {
+		year: 2016,
+		month: 8,
+		week: 31,
+		dayofyear: 215,
+		day: 3,
+		dayofweek: 3,
+		dayofweek_iso: 3,
+		hour: 15,
+		minute: 18,
+		second: 29,
+		m: 201608
+	}
+	*/
+
+	// Add the image field if exists
+	$category_field = isset( $node->field_category ) ? field_get_items( 'node', $node, 'field_category' ) : false;
+	if ( $category_field ) {
+		//pc_init_pc();
+		//pc($category_field[0]['name'], '$category_field');
+		//unset( $category_field[0]->rdf_mapping );
+		//pc_init_pc();
+		//pc($node->field_category, '$category_field');
+		//$params['body']['field_category'] = $category_field;
+	}
+
+	// Add the body field if exists
+	$body_field = isset( $node->body ) ? field_get_items( 'node', $node, 'body' ) : false;
+	if ( $body_field ) {
+		$params['body']['body'] = $body_field;
+	}
+
+	// Add the image field if exists
+	$image_field = isset( $node->field_image ) ? field_get_items( 'node', $node, 'field_image' ) : false;
+	if ( $image_field ) {
+		$params['body']['field_image'] = array_map( function( $img ) {
+			$img_alt = $img['alt'];
+			$img_description = $img['description'];
+			$img = file_load( $img['fid'] );
+			$img->url = file_create_url( $img->uri );
+			//$image_uri = $image_field[0]['uri']; // Image: uri (fcc)
+			//$img->image_alt = htmlentities( $image_field[0]['alt'], ENT_QUOTES, 'UTF-8' );
+			$img->image_caption = $img_alt;
+			$img->image_description = $img_description;
+			return $img;
+		}, $image_field);
+	}
+
+	return $params;
+}
+
+/**
+ * Helper function that returns a node from Elastic by its nid.
+ *
+ * @param $client
+ * @param $node
+ * @return mixed
+ */
+function _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node ) {
+	$search = array(
+		'index' => ES_NODE_ID, // TODO make dynamic for property name
+		'type' => $node->type,
+		'version' => true,
+		'body' => array(
+		  'query' => array(
+		    'match' => array(
+		      'nid' => $node->nid,
+		    ),
+		  ),
+		),
+	);
+
+	return $client->search( $search );
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function fcc_elasticsearch_indexer_node_insert( $node ) {
+	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
+	$params = _fcc_elasticsearch_indexer_prepare_node( $node );
+
+	if ( ! $params ) {
+		drupal_set_message( t( 'There was a problem saving this node to Elastic.' ) );
+		return;
+	}
+
+	$result = $client->index( $params );
+	if ( $result && $result['created'] === false ) {
+		drupal_set_message( t( 'There was a problem saving this node to Elastic.' ) );
+		return;
+	}
+
+	drupal_set_message( t( 'The node has been saved to Elastic.' ) );
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function fcc_elasticsearch_indexer_node_update( $node ) {
+	if ( $node->is_new !== false ) {
+		return;
+	}
+	//pc_init_pc();
+	//pc($node, '$node');
+
+	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
+	$params = _fcc_elasticsearch_indexer_prepare_node( $node );
+
+	if ( ! $params ) {
+		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+		return;
+	}
+
+	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
+	if ( $result && $result['hits']['total'] !== 1 ) {
+		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+		return;
+	}
+
+	$params['id'] = $result['hits']['hits'][0]['_id'];
+	$version = $result['hits']['hits'][0]['_version'];
+	$index = $client->index( $params );
+
+	if ( $index['_version'] !== $version + 1 ) {
+		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+		return;
+	}
+
+	drupal_set_message( t( 'The node has been updated in Elastic.' ) );
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function fcc_elasticsearch_indexer_node_delete( $node ) {
+	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
+
+	// If the node is in Elastic, remove it
+	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
+	if ( $result && $result['hits']['total'] !== 1 ) {
+		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
+		return;
+	}
+
+	$params = array(
+	  'index' => ES_NODE_ID, // TODO make dynamic for property name
+	  'type' => $node->type,
+	  'id' => $result['hits']['hits'][0]['_id'],
+	);
+
+	$result = $client->delete( $params );
+	if ( $result && $result['found'] !== true ) {
+		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
+		return;
+	}
+
+	drupal_set_message( t( 'The node has been deleted in Elastic.' ) );
+}
