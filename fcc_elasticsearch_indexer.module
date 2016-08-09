@@ -109,6 +109,80 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 }
 
 /**
+ * Converts node entity type to document.
+ *
+ * @param type $index
+ * @param type $offset
+ * @param type $batch_size
+ * @return array
+ */
+function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $batch_size) {
+  $query = new \EntityFieldQuery();
+
+  $result = $query
+      ->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'article')
+      ->range($offset, $batch_size)
+      ->execute();
+
+  // Ensure we've got some node results.
+  if (!isset($result['node'])) {
+    drush_log("No nodes to process.", "ok");
+    return;
+  }
+
+  // Add the ids with the entity type to the $entities array
+  $ids = array_keys($result['node']);
+
+  // Load entities
+  $entities = entity_load('node', $ids);
+
+  // Build document array
+  // Notice: Command and Content arrays must be separated for bulk indexing to work.
+  $document = array();
+  foreach ($entities as $entity) {
+    //Document: Command
+    $document['body'][] = array(
+      'index' => array(
+        '_index' => $index, // TODO make dynamic for property name
+        '_type' => $entity->type,
+      ),
+    );
+    //Document: Content
+    $document['body'][] = array(
+      // Default
+      'vid' => $entity->vid,
+      'uid' => $entity->uid,
+      'title' => $entity->title,
+      'status' => $entity->status,
+      'comment' => $entity->comment,
+      'promote' => $entity->promote,
+      'sticky' => $entity->sticky,
+      'nid' => $entity->nid,
+      'type' => $entity->type,
+      'language' => $entity->language,
+      'created' => $entity->created,
+      'changed' => $entity->changed,
+      'revision_timestamp' => $entity->revision_timestamp,
+      'revision_uid' => $entity->revision_uid,
+      //Custom Fields
+      'current' => $entity->workbench_moderation['current'],
+      'published' => $entity->workbench_moderation['published'],
+      'my_revision' => $entity->workbench_moderation['my_revision'],
+      'field_newspaper' => $entity->field_newspaper[LANGUAGE_NONE],
+      'field_google_drive_document_id' => $entity->field_google_drive_document_id[LANGUAGE_NONE],
+      'field_override_url' => $entity->field_override_url[LANGUAGE_NONE],
+      'field_category' => $entity->field_category[LANGUAGE_NONE],
+      'field_tags' => $entity->field_tags[LANGUAGE_NONE],
+      'field_image' => $entity->field_image[LANGUAGE_NONE],
+      'body' => $entity->body[LANGUAGE_NONE][0],
+    );
+  }
+
+  return $document;
+}
+
+/**
  * Helper function that returns a node from Elastic by its nid.
  *
  * @param $client
