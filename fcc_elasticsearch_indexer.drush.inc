@@ -15,13 +15,11 @@ function fcc_elasticsearch_indexer_drush_command() {
     'examples' => array(
       'drush elastic-search-index' => dt('Index items for all of the elastic search indexes.'),
       'drush es-i' => dt('Alias to index items for all of the elastic search indexes.'),
-      'drush es-i fccnn' => dt('Index items for the index with the index name !name.', array('!name' => 'fccnn')),
-      'drush es-i fccnn 100' => dt("Index a maximum number of !limit items (index's cron batch size items per batch run) for the index name !name.", array('!limit' => 100, '!name' => 'fccnn')),
-      'drush es-i fccnn 100 10' => dt("Index a maximum number of !limit items (!batch_size items per batch run) for the index name !name.", array('!limit' => 100, '!batch_size' => 10, '!name' => 'fccnn')),
-      'drush es-i 0 0 100' => dt("Index all items of all indexes with !batch_size items per batch run.", array('!batch_size' => 100)),
+      'drush es-i 100' => dt("Index a maximum number of !limit items (index's cron batch size items per batch run) for the index name !name.", array('!limit' => 100, '!name' => 'fccnn')),
+      'drush es-i 100 10' => dt("Index a maximum number of !limit items (!batch_size items per batch run) for the index name !name.", array('!limit' => 100, '!batch_size' => 10, '!name' => 'fccnn')),
+      'drush es-i 0 100' => dt("Index all items of all indexes with !batch_size items per batch run.", array('!batch_size' => 100)),
     ),
     'arguments' => array(
-      'index_id' => dt('The numeric ID or machine name of an index. Set to 0 to index all indexes. Defaults to 0 (index all).'),
       'limit' => dt("The number of items to index (index's cron batch size items per run). Set to 0 to index all items. Defaults to 0 (index all)."),
       'batch_size' => dt("The number of items to index per batch run. Set to 0 to index all items at once. Defaults to the index's cron batch size."),
     ),
@@ -41,14 +39,9 @@ function fcc_elasticsearch_indexer_drush_command() {
  * @param integer $batch_size
  *   Number of items to index per batch.
  */
-function drush_fcc_elasticsearch_indexer_elastic_search_index($index = NULL, $limit = NULL, $batch_size = 5) {
+function drush_fcc_elasticsearch_indexer_elastic_search_index($limit = NULL, $batch_size = 5) {
   if (elasticsearch_index_drush_static(__FUNCTION__)) {
     return;
-  }
-
-  // Get default index name if empty
-  if (empty($index)) {
-    $index = 'fccnn';
   }
 
   // Get total count if limit isn't set
@@ -64,7 +57,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($index = NULL, $li
   if (empty($client)) {
     return;
   }
-  _drush_elastic_search_batch_indexing_create($client, $index, $limit, $batch_size);
+  _drush_elastic_search_batch_indexing_create($client, 'fccnn', $limit, $batch_size);
 }
 
 /**
