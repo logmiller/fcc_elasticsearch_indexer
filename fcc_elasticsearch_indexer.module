@@ -117,6 +117,7 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
   $result = $query
       ->entityCondition('entity_type', 'node')
       ->entityCondition('bundle', 'article')
+      ->propertyOrderBy('created', 'DESC')
       ->range($offset, $batch_size)
       ->execute();
 
@@ -174,6 +175,7 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
       'index' => array(
         '_index' => $index, // TODO make dynamic for property name
         '_type' => $entity->type,
+        '_id' => $entity->nid,
       ),
     );
     //Document: Content
