@@ -2,7 +2,7 @@
 
 # Declare Constants
 define( 'DEFAULT_CLUSTER_ID', 'elasticsearch' ); // TODO make dynamic?
-define( 'ES_NODE_ID', 'fccnn' );
+//define( 'ES_NODE_ID', 'fccnn' );
 
 /**
  * Prepares a node to be added to elastic
@@ -23,7 +23,7 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 	$uid = $node->uid;
 
 	$params = array(
-		'index' => ES_NODE_ID, // NOTE: this may stay static for the sake of a flat index
+		'index' => 'fccnn', // NOTE: this may stay static for the sake of a flat index
 		'type' => $node->type,
 		'body' => array(),
 	);
@@ -63,20 +63,14 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 
 	// Add the 'Category' field (if it exists) // TODO Expand This
 	$category_field = isset( $node->field_category ) ? field_get_items( 'node', $node, 'field_category' ) : false;
-	if ( $category_field ) {
-		$params['body']['category'] = '';
-		//pc_init_pc();
-		//pc($category_field[0]['name'], '$category_field');
-		//unset( $category_field[0]->rdf_mapping );
-		//pc_init_pc();
-		//pc($node->field_category, '$category_field');
-		//$params['body']['field_category'] = $category_field;
+  if ( $category_field ) {
+		$params['body']['category'] = NULL;
 	}
 
 	// Add the 'Tags' field (if it exists) // TODO Expand This
 	$tags_field = isset( $node->field_tags ) ? field_get_items( 'node', $node, 'field_tags' ) : false;
 	if ( $tags_field ) {
-		$params['body']['tags'] = '';
+		$params['body']['tags'] = NULL;
 	}
 
 	// Add the 'Body' field (if it exists)
@@ -141,6 +135,39 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
   // Notice: Command and Content arrays must be separated for bulk indexing to work.
   $document = array();
   foreach ($entities as $entity) {
+
+    //Field Override URL
+    if (!empty($entity->field_override_url)) {
+      $url = $entity->field_override_url[LANGUAGE_NONE][0]['value']; // URL Override
+    }
+    else {
+      $url = url('node/' . $entity->nid); // No URL Override
+    }
+
+    //Field Author
+    $author = fcc_es_get_author_fields($entity->nid, $entity->uid);
+
+    //Field Image
+    $image_field = $entity->field_image[LANGUAGE_NONE];
+    if (!empty($image_field)) {
+      $images = array_map(function( $img ) {
+        $img_alt = $img['alt'];
+        $img_description = $img['description'];
+        $img = file_load($img['fid']);
+        $img->url = (!empty($image_field[0]['uri']) ) ? file_create_url($img_uri[0]['uri']) : file_create_url($img->uri);
+        $img->full_1000 = (!empty($image_field[0]['uri']) ) ? image_style_url('full_1000', $image_field[0]['uri']) : file_create_url($img->uri);
+        $img->featured_860 = (!empty($image_field[0]['uri']) ) ? image_style_url('16x9_860', $image_field[0]['uri']) : file_create_url($img->uri);
+        $img->featured_620 = (!empty($image_field[0]['uri']) ) ? image_style_url('16x9_620', $image_field[0]['uri']) : file_create_url($img->uri);
+        $img->featured_430 = (!empty($image_field[0]['uri']) ) ? image_style_url('16x9_430', $image_field[0]['uri']) : file_create_url($img->uri);
+        $img->featured_315 = (!empty($image_field[0]['uri']) ) ? image_style_url('16x9_315', $image_field[0]['uri']) : file_create_url($img->uri);
+        $img->square_300 = (!empty($image_field[0]['uri']) ) ? image_style_url('square_300', $image_field[0]['uri']) : file_create_url($img->uri);
+        $img->medium = (!empty($image_field[0]['uri']) ) ? image_style_url('medium', $image_field[0]['uri']) : file_create_url($img->uri);
+        $img->image_caption = htmlentities($img_alt, ENT_QUOTES, 'UTF-8');
+        $img->image_description = $img_description;
+        return $img;
+      }, $image_field);
+    }
+
     //Document: Command
     $document['body'][] = array(
       'index' => array(
@@ -151,31 +178,33 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
     //Document: Content
     $document['body'][] = array(
       // Default
-      'vid' => $entity->vid,
-      'uid' => $entity->uid,
-      'title' => $entity->title,
-      'status' => $entity->status,
-      'comment' => $entity->comment,
-      'promote' => $entity->promote,
-      'sticky' => $entity->sticky,
       'nid' => $entity->nid,
-      'type' => $entity->type,
-      'language' => $entity->language,
+      'title' => $entity->title,
+      'uid' => $entity->uid,
+      'name' => $author['name'],
+      'picture' => $entity->picture,
       'created' => $entity->created,
       'changed' => $entity->changed,
       'revision_timestamp' => $entity->revision_timestamp,
+      'vid' => $entity->vid,
       'revision_uid' => $entity->revision_uid,
+      'type' => $entity->type,
+      'status' => $entity->status,
+      'promote' => $entity->promote,
+      'sticky' => $entity->sticky,
+      'path' => $url, //TODO
+      'url' => $_SERVER['HTTP_HOST'] . $url, //TODO
+      'author' => $author,
       //Custom Fields
       'current' => $entity->workbench_moderation['current'],
       'published' => $entity->workbench_moderation['published'],
       'my_revision' => $entity->workbench_moderation['my_revision'],
-      'field_newspaper' => $entity->field_newspaper[LANGUAGE_NONE],
-      'field_google_drive_document_id' => $entity->field_google_drive_document_id[LANGUAGE_NONE],
-      'field_override_url' => $entity->field_override_url[LANGUAGE_NONE],
-      'field_category' => $entity->field_category[LANGUAGE_NONE],
-      'field_tags' => $entity->field_tags[LANGUAGE_NONE],
-      'field_image' => $entity->field_image[LANGUAGE_NONE],
+      'newspaper' => $entity->field_newspaper[LANGUAGE_NONE],
+      'google_drive_document_id' => $entity->field_google_drive_document_id[LANGUAGE_NONE],
+      'category' => $entity->field_category[LANGUAGE_NONE],
+      'tags' => $entity->field_tags[LANGUAGE_NONE],
       'body' => $entity->body[LANGUAGE_NONE][0],
+      'field_image' => $images,
     );
   }
 
@@ -294,59 +323,52 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 # FCC Custom Retrieval Functions
 ------------------------------------------------------------------------------*/
 
-function fcc_es_get_author_fields( $nid, $uid ) {
+/**
+ * Retrieve the author fields.
+ * @param type $nid
+ * @param type $uid
+ */
+function fcc_es_get_author_fields($nid, $uid) {
   //Author Fields
   $author = array();
-	//$author = user_load( $uid );
-  if ( $uid > 1 ) :
-    $user = user_load( $uid );
+  if ($uid > 1) :
+    $user = user_load($uid);
     //Author name
-    //$author['name'] = fcc_es_get_author_name( $user, $nid ); // NOTE Uncomment for staging
-		$author['name'] = '{{Author Name}}'; // NOTE Theme Function
-    $author['url'] = url( drupal_get_path_alias( "user/$uid" ) );
+    $author['realname'] = fcc_es_get_author_name($user, $nid); // NOTE Uncomment for staging
+    $author['name'] = $user->name; // NOTE Theme Function
+    $author['url'] = url(drupal_get_path_alias("user/$uid"));
+    if (!empty($user->picture)) {
+      $author['picture'] = array(
+        'uri' => $user->picture->uri,
+        'width' => $user->picture->image_dimensions['width'],
+        'height' => $user->picture->image_dimensions['height'],
+      );
+    }
     $author['byline'] = "By <a href='{$author['url']}'>{$author['name']}</a>";
-    //Author Block
-    /*$target = array( 'Reporter', 'Designer', 'Site Editor', 'Universal Editor', 'administrator' ); // NOTE Uncomment for staging
-    if (count(array_intersect($user->roles, $target)) > 0) :
-      if (!empty($user->picture)) {
-        $author['picture'] = array(
-          'uri' => $user->picture->uri,
-          'width' => $user->picture->image_dimensions['width'],
-          'height' => $user->picture->image_dimensions['height'],
-        );
-      }
-      $author['info'] = array('name' => $author['name'], 'url' => $author['url']);
-      $author['bio'] = (!empty($user->field_bio)) ? $user->field_bio[LANGUAGE_NONE][0]['value'] : '';
-      $author['email'] = (!empty($user->mail)) ? $user->mail : '';
-      $author['phone'] = (!empty($user->field_phone_number)) ? $user->field_phone_number[LANGUAGE_NONE][0]['value'] : '';
-      $author['twitter'] = (!empty($user->twitter)) ? $user->field_twitter[LANGUAGE_NONE][0]['value'] : '';
-      $author['google'] = (!empty($user->field_google_plus)) ? $user->field_google_plus[LANGUAGE_NONE][0]['value'] : '';
-    elseif (in_array('Open Author', $user->roles)):
-    //@TODO verify open author
-	endif;*/
-  else :
-    $author['byline'] = "Posted";
-    $author['name'] = '';
+    $author['bio'] = (!empty($user->field_bio)) ? $user->field_bio[LANGUAGE_NONE][0]['value'] : '';
+    $author['email'] = (!empty($user->mail)) ? $user->mail : '';
+    $author['phone'] = (!empty($user->field_phone_number)) ? $user->field_phone_number[LANGUAGE_NONE][0]['value'] : '';
+    $author['twitter'] = (!empty($user->twitter)) ? $user->field_twitter[LANGUAGE_NONE][0]['value'] : '';
+    $author['google'] = (!empty($user->field_google_plus)) ? $user->field_google_plus[LANGUAGE_NONE][0]['value'] : '';
   endif;
   return $author;
 }
 
 /**
- * Render the author name for node pages.
- *
+ * Retrieve the author real name.
  * @param Object $author The Author object on which the operation is being performed.
  * @return string The name of the author.
  */
-function fcc_es_get_author_name( $author, $node ) {
-	if ( isset( $author->realname ) && ( $author->realname !== '' ) ) :
-		$author_name = $author->realname;
-  elseif ( ( isset( $author->field_first_name[$node->language][0]['value'] ) && $author->field_first_name[$node->language][0]['value'] ) || ( isset( $author->field_last_name[$node->language][0]['value']) && $author->field_last_name[$node->language][0]['value'] ) ) :
+function fcc_es_get_author_name($author, $node) {
+  if (isset($author->realname) && ( $author->realname !== '' )) :
+    $author_name = $author->realname;
+  elseif (( isset($author->field_first_name[$node->language][0]['value']) && $author->field_first_name[$node->language][0]['value'] ) || ( isset($author->field_last_name[$node->language][0]['value']) && $author->field_last_name[$node->language][0]['value'] )) :
     $author_name = $author->field_first_name[$node->language][0]['value'] . ' ' . $author->field_last_name[$node->language][0]['value'];
   else:
-    if ( isset( $author->name ) ) :
+    if (isset($author->name)) :
       $author_name = $author->name;
     else :
-			$author_name = '';
+      $author_name = '';
     endif;
   endif;
   return $author_name;

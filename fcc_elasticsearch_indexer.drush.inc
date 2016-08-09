@@ -78,10 +78,9 @@ function _drush_elastic_search_batch_indexing_create($client, $index, $limit, $b
   // Get the number of remaining items to index.
   try {
 // ELASTICSEARCH BULK INDEX
-    $temps_debut = microtime(true);
     //Create index and mapping
     $offset = 0;
-    for ($count = 1; $count <= $limit; $count++) {
+    for ($count = 0; $count <= $limit; $count++) {
       if ($count % $batch_size == 0) {   // Every n documents stop and send the bulk request
         $document = _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $batch_size);
         $responses = $client->bulk($document);
@@ -90,8 +89,6 @@ function _drush_elastic_search_batch_indexing_create($client, $index, $limit, $b
         unset($responses); // unset  to save memory
       }
     }
-    $temps_fin = microtime(true);
-    echo 'Elasticsearch bulk: ' . round($count / round($temps_fin - $temps_debut, 4)) . ' per sec <br>';
   } catch (Exception $ex) {
     drush_log($ex->getMessage(), 'error');
   }
