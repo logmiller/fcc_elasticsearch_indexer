@@ -4,6 +4,9 @@
  * @file fcc_upgrade_helper.drush.inc
  * TODO: Enter file description here.
  */
+
+include_once 'progress.drush.inc';
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -74,24 +77,29 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($limit = NULL, $ba
  * @return bool
  *   TRUE if batch was created, FALSE otherwise.
  */
-function _drush_elastic_search_batch_indexing_create($client, $index, $limit, $batch_size) {
-  // Get the number of remaining items to index.
-  try {
-// ELASTICSEARCH BULK INDEX
-    //Create index and mapping
-    $offset = 0;
-    for ($count = 0; $count <= $limit; $count++) {
-      if ($count % $batch_size == 0) {   // Every n documents stop and send the bulk request
-        $document = _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $batch_size);
-        $responses = $client->bulk($document);
-        $offset = $count;
-        unset($document);  // erase the old bulk request
-        unset($responses); // unset  to save memory
-      }
-    }
-  } catch (Exception $ex) {
-    drush_log($ex->getMessage(), 'error');
-  }
+function _drush_elastic_search_batch_indexing_create( $client, $index, $limit, $batch_size ) {
+
+	// Get the number of remaining items to index.
+	try {
+		// ELASTICSEARCH BULK INDEX
+		$total = ceil( ( $limit / $batch_size ) ); // Set total batches for the progress bar
+		$bar = drush_create_progress();
+		//Create index and mapping
+		$offset = 0;
+		for ( $count = 0; $count <= $limit; $count++ ) {
+			if ( $count % $batch_size == 0 ) { // Every n documents stop and send the bulk request
+				$document = _fcc_elasticsearch_indexer_node_entity_to_documents( $index, $offset, $batch_size );
+				$responses = $client->bulk( $document );
+				$offset = $count;
+				unset( $document );  // erase the old bulk request
+				unset( $responses ); // unset  to save memory
+				$bar->setProgress( $total, $count );
+			}
+		}
+		$bar->end();
+	} catch (Exception $ex) {
+		drush_log( $ex->getMessage(), 'error' );
+	}
 }
 
 /**
