@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @file es_retrieve_index.inc
+ * @file fcc_elasticsearch.index.inc
  * Elastic Search Index Doc Name
  */
 function _es_get_index_name($domain_id) {
