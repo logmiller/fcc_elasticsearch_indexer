@@ -2,7 +2,7 @@
 
 # Declare Constants
 define( 'DEFAULT_CLUSTER_ID', 'elasticsearch' ); // TODO make dynamic?
-//define( 'ES_NODE_ID', 'fccnn' );
+define( 'ES_NODE_ID', 'fccnn' );
 
 /**
  * Prepares a node to be added to elastic
@@ -23,7 +23,7 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 	$uid = $node->uid;
 
 	$params = array(
-		'index' => 'fccnn', // NOTE: this may stay static for the sake of a flat index
+		'index' => ES_NODE_ID, // NOTE: this may stay static for the sake of a flat index
 		'type' => $node->type,
 		'body' => array(),
 	);
@@ -39,7 +39,7 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 
 	// Add the article 'URL' link // NOTE leave protocol off for now
 	if ( ! empty( $node->field_override_url ) ) {
-		$url = $article_node->field_override_url[ $article_node->language ][0]['value']; // URL Override
+		$url = $node->field_override_url[ $node->language ][0]['value']; // URL Override
 	} else {
 		$url = url( 'node/' . $nid ); // No URL Override
 	}
