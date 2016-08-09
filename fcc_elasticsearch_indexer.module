@@ -25,6 +25,7 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 	$params = array(
 		'index' => 'fccnn', // NOTE: this may stay static for the sake of a flat index
 		'type' => $node->type,
+		'id' => $node->nid,
 		'body' => array(),
 	);
 
