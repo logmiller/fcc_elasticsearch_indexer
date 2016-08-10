@@ -132,7 +132,9 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
 
     // Load entities
     $entities = entity_load('node', $ids);
-
+    unset($ids); // unset ids
+    unset($result); // close query
+    
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
@@ -140,14 +142,11 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
 
         //Field Override URL
         if (!empty($entity->field_override_url)) {
-            $url = $entity->field_override_url[LANGUAGE_NONE][0]['value']; // URL Override
+            $url = fcc_es_get_data_field_value('field_override_url', $entity); // URL Override
         }
         else {
             $url = url('node/' . $entity->nid);
         }
-
-        //Field Taxonomy
-        $taxonomy = fcc_es_get_taxonomy_terms($entity);
 
         //Field Author
         $author = fcc_es_get_author_fields($entity->nid, $entity->uid);
@@ -202,17 +201,25 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
           'url' => $_SERVER['HTTP_HOST'] . $url, //TODO
           'author' => $author,
           //Custom Fields
-          'current' => $entity->workbench_moderation['current'],
           'published' => $entity->workbench_moderation['published'],
-          'my_revision' => $entity->workbench_moderation['my_revision'],
-          'newspaper' => $entity->field_newspaper[LANGUAGE_NONE],
-          'google_drive_document_id' => $entity->field_google_drive_document_id[LANGUAGE_NONE],
-          'category' => $taxonomy['categories'],
-          'tags' => $taxonomy['tags'],
+          'newspaper' => fcc_es_get_data_field_value('field_newspaper', $entity),
+          'google_drive_document_id' => fcc_es_get_data_field_value('field_google_drive_document_id', $entity),
+          'category' => fcc_es_get_taxonomy_terms('field_category', $entity),
+          'tags' => fcc_es_get_taxonomy_terms('field_tags', $entity),
           'body' => $entity->body[LANGUAGE_NONE][0],
           'field_image' => $images,
+          'field_video' => fcc_es_get_file_fields('field_video', $entity),
+          'field_audio' => fcc_es_get_file_fields('field_audio', $entity),
+          'poll' => fcc_es_get_poll_fields($entity),
+          'field_map' => $entity->field_map[LANGUAGE_NONE][0],
+            //Path
+            //'path' => array('pid' => '', 'source' => '', 'alias' => '', 'language' => ''),
+            //'domains' => '',
+            //'subdomains' => '',
+            //'domain_site' => '', // WHAT IS THIS?
         );
     }
+    unset($entities); // unset entities
 
     return $document;
 }
@@ -383,30 +390,93 @@ function fcc_es_get_author_name($author, $node) {
 /**
  * Fetch all taxonomy terms from an entity.
  *
+ * @param type $field
  * @param Object $entity
  *
  * @return array
  *   Array with tids of entity.
  */
-function fcc_es_get_taxonomy_terms($entity) {
-
-    $taxonomy_fields = array('field_category', 'field_tags');
+function fcc_es_get_taxonomy_terms($field, $entity) {
     $terms = array();
-    foreach ($taxonomy_fields as $field) {
+    $entity_field = $entity->{$field}[LANGUAGE_NONE];
+    if (is_array($entity_field) || $entity_field instanceof Traversable) {
+        foreach ($entity_field as $tid) {
+            $term = taxonomy_term_load($tid['tid']);
+            if (!empty($term->tid)) {
+                $terms[$term->vocabulary_machine_name][] = array(
+                  'tid' => $term->tid,
+                  'name' => $term->name,
+                );
+            }
+        }
+        unset($entity_field);
+    }
+    return $terms;
+}
+
+/**
+ * Fetch all taxonomy terms from an entity.
+ *
+ * @param type $field
+ * @param Object $entity
+ *
+ * @return array
+ *   Array with tids of entity.
+ */
+function fcc_es_get_file_fields($field, $entity) {
+    $file_entity = array();
+    $file_entity[$field] = array();
+    $entity_field = $entity->{$field}[LANGUAGE_NONE];
+    if (is_array($entity_field) || $entity_field instanceof Traversable) {
+        $fids = array_column($entity->{$field}[LANGUAGE_NONE], 'fid');
+        $file_entity[$field] = file_load_multiple($fids);
+    }
+    unset($fids); // unset file ids
+    return $file_entity;
+}
+
+/**
+ * Fetch poll fields from an entity.
+ * @param type $entity
+ * @return type
+ */
+function fcc_es_get_poll_fields($entity) {
+    $poll = array();
+    $poll_fields = array('field_poll_id', 'field_poll_title');
+
+    foreach ($poll_fields as $field) {
         $entity_field = $entity->{$field}[LANGUAGE_NONE];
         if (is_array($entity_field) || $entity_field instanceof Traversable) {
-            foreach ($entity_field as $tid) {
-                $term = taxonomy_term_load($tid['tid']);
-                if (!empty($term->tid)) {
-                    $terms[$term->vocabulary_machine_name][] = array(
-                      'tid' => $term->tid,
-                      'name' => $term->name,
-                    );
-                }
-            }
-            unset($entity_field);
+            $value = array_shift(array_column($entity_field, 'value'));
         }
+        else {
+            return $poll;
+        }
+        if ($field == 'field_poll_id') {
+            $poll = array(
+              'id' => $value,
+              'url' => 'polldaddy.com/poll/' . $value,
+            );
+        }
+        elseif ($field == 'field_poll_title') {
+            $poll['title'] = $value;
+        }
+        unset($value); // unset poll value
     }
-    unset($taxonomy_fields); // unset taxonomy_fields
-    return $terms;
+    unset($poll_fields); // unset poll fields
+    return $poll;
+}
+
+/**
+ * Strips first value from data field.
+ * @param type $field
+ * @param type $entity
+ * @return type
+ */
+function fcc_es_get_data_field_value($field, $entity) {
+    $entity_field = $entity->{$field}[LANGUAGE_NONE];
+    if (is_array($entity_field) || $entity_field instanceof Traversable) {
+        $value = array_shift(array_column($entity_field, 'value'));
+    }
+    return $value;
 }
