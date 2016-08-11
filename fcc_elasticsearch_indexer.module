@@ -210,12 +210,10 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
           'video' => fcc_es_get_file_fields('field_video', $entity),
           'audio' => fcc_es_get_file_fields('field_audio', $entity),
           'poll' => fcc_es_get_poll_fields($entity),
-          //'field_map' => $entity->field_map[LANGUAGE_NONE][0], // TODO: Disable module as field look to be unsed
-          //Path
-          'path' => array('pid' => '', 'source' => '', 'alias' => '', 'language' => ''),
-          'domains' => '',
-          'subdomains' => '',
-            //'domain_site' => '', // WHAT IS THIS?
+          'path' => $entity->path,
+          'domains' => $entity->domains,
+          'subdomains' => $entity->subdomains,
+          'domain_site' => $entity->domain_site,
         );
     }
     unset($entities); // unset entities
@@ -423,29 +421,29 @@ function fcc_es_get_taxonomy_terms($field, $entity) {
  *   Array with tids of entity.
  */
 function fcc_es_get_file_fields($field, $entity) {
-    $file_entity = array();
-    $file_entity[$field] = array();
+    $videos = array();
     $entity_field = $entity->{$field}[LANGUAGE_NONE];
     if (is_array($entity_field) || $entity_field instanceof Traversable) {
         $fids = array_column($entity->{$field}[LANGUAGE_NONE], 'fid');
-        $file = array_shift(file_load_multiple($fids));
-        $media = fcc_es_get_media_stream_paths($file);
-
-        $file_entity[$file->type] = array(
-          'type' => $file->type,
-          'fid' => $file->fid,
-          'uid' => $file->uid,
-          'filename' => $file->filename,
-          'uri' => $file->uri,
-          'filemime' => $file->filemime,
-        );
-        $file_entity[$file->type] = array_merge($file_entity[$file->type], $media);
-
-        unset($media); // unset media
-        unset($file); // unset file
+        $files = file_load_multiple($fids);
         unset($fids); // unset file ids
+        foreach ($files as $file) {
+            $media = fcc_es_get_media_stream_paths($file);
+            $video = array(
+              'type' => $file->type,
+              'fid' => $file->fid,
+              'uid' => $file->uid,
+              'filename' => $file->filename,
+              'uri' => $file->uri,
+              'filemime' => $file->filemime,
+            );
+
+            $videos[] = array_merge($video, $media);
+            unset($media); // unset media
+        }
+        unset($file); // unset file
     }
-    return $file_entity;
+    return $videos;
 }
 
 /**
