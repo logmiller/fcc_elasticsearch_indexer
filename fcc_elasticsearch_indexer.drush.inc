@@ -2,10 +2,11 @@
 
 /**
  * @file fcc_upgrade_helper.drush.inc
- * TODO: Enter file description here.
+ * Drush Commands
  */
 
-include_once 'progress.drush.inc';
+# Load Includes
+module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'progress.drush' );
 
 /*
  * To change this template, choose Tools | Templates

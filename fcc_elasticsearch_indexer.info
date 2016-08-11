@@ -4,5 +4,7 @@ version = 0.16.08.04
 core = 7.x
 ; required
 files[] = fcc_elasticsearch.index.inc
+files[] = fcc_elasticsearch_indexer.parameters.inc
+files[] = progress.drush.inc
 
 dependencies[] = elasticsearch_connector
