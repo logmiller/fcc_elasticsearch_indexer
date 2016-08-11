@@ -153,7 +153,7 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
           'audio' => fcc_es_get_file_fields('field_audio', $entity),
           'poll' => fcc_es_get_poll_fields($entity),
           'path' => $entity->path,
-          'domains' => $entity->domains,
+          'domains' => array_values($entity->domains),
           'subdomains' => $entity->subdomains,
           'domain_site' => $entity->domain_site,
         );
