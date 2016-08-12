@@ -24,6 +24,7 @@ function fcc_elasticsearch_indexer_drush_command() {
       'drush es-i 0 100' => dt("Index all items of all indexes with !batch_size items per batch run.", array('!batch_size' => 100)),
     ),
     'arguments' => array(
+      'node_type' => dt("The node type being inserted."),
       'limit' => dt("The number of items to index (index's cron batch size items per run). Set to 0 to index all items. Defaults to 0 (index all)."),
       'batch_size' => dt("The number of items to index per batch run. Set to 0 to index all items at once. Defaults to the index's cron batch size."),
     ),
@@ -43,25 +44,37 @@ function fcc_elasticsearch_indexer_drush_command() {
  * @param integer $batch_size
  *   Number of items to index per batch.
  */
-function drush_fcc_elasticsearch_indexer_elastic_search_index($limit = NULL, $batch_size = 5) {
-  if (elasticsearch_index_drush_static(__FUNCTION__)) {
-    return;
-  }
+function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL, $limit = NULL, $batch_size = 5) {
+    if (elasticsearch_index_drush_static(__FUNCTION__)) {
+        return;
+    }
+    // Check if node type is of supported node types
+    $supported_node_types = array('article', 'obituaries', 'letters', 'legals', 'celebrations');
+    if (in_array($node_type, $supported_node_types)) {
+        // Get total count if limit isn't set
+        if (empty($limit)) {
+            $query = new \EntityFieldQuery();
+            $limit = $query
+                    ->entityCondition('entity_type', 'node')
+                    ->entityCondition('bundle', 'article')
+                    ->entityCondition('status', '1')
+                    ->count()->execute();
+        }
 
-  // Get total count if limit isn't set
-  if (empty($limit)) {
-    $query = new \EntityFieldQuery();
-    $limit = $query
-            ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'article')
-            ->count()->execute();
-  }
-
-  $client = elasticsearch_connector_get_client_by_id(DEFAULT_CLUSTER_ID);
-  if (empty($client)) {
-    return;
-  }
-  _drush_elastic_search_batch_indexing_create($client, 'fccnn', $limit, $batch_size);
+        $client = elasticsearch_connector_get_client_by_id(DEFAULT_CLUSTER_ID);
+        if (empty($client)) {
+            return;
+        }
+        _drush_elastic_search_batch_indexing_create($client, 'fccnn', $limit, $batch_size);
+    }
+    else {
+        drupal_set_message(t('There was a problem saving this node to Elastic - the node type used is not supported.'));
+        if (drupal_is_cli() && function_exists('drush_main')) { // Code is being run from drush.
+            drush_set_error('Error: the node type used is currently not supported.');
+            return;
+        }
+    }
+    unset($supported_node_types); // unset supported node types
 }
 
 /**
