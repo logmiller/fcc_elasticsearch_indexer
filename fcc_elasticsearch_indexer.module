@@ -11,6 +11,8 @@ define( 'ES_NODE_ID', 'fccnn' );
 # Load Includes
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.types' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.parameters' );
+module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.sitenames' );
+
 
 /*------------------------------------------------------------------------------
 # Node Functions
