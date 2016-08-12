@@ -56,7 +56,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
             $query = new \EntityFieldQuery();
             $limit = $query
                     ->entityCondition('entity_type', 'node')
-                    ->entityCondition('bundle', 'article')
+                    ->entityCondition('bundle', $node_type)
                     ->entityCondition('status', '1')
                     ->count()->execute();
         }
@@ -65,7 +65,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
         if (empty($client)) {
             return;
         }
-        _drush_elastic_search_batch_indexing_create($client, 'fccnn', $limit, $batch_size);
+        _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $batch_size);
     }
     else {
         drupal_set_message(t('There was a problem saving this node to Elastic - the node type used is not supported.'));
@@ -91,7 +91,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
  * @return bool
  *   TRUE if batch was created, FALSE otherwise.
  */
-function _drush_elastic_search_batch_indexing_create( $client, $index, $limit, $batch_size ) {
+function _drush_elastic_search_batch_indexing_create( $client, $node_type, $limit, $batch_size ) {
 
 	// Get the number of remaining items to index.
 	try {
@@ -102,7 +102,8 @@ function _drush_elastic_search_batch_indexing_create( $client, $index, $limit, $
 		$offset = 0;
 		for ( $count = 0; $count <= $limit; $count++ ) {
 			if ( $count % $batch_size == 0 ) { // Every n documents stop and send the bulk request
-				$document = _fcc_elasticsearch_indexer_node_article_to_documents( $index, $offset, $batch_size );
+                                //TODO: dynamic switch bulk indexer between node_type
+				$document = _fcc_elasticsearch_indexer_node_article_to_documents( 'fccnn', $offset, $batch_size );
 				$responses = $client->bulk( $document );
 				$offset = $count;
 				unset( $document );  // erase the old bulk request
