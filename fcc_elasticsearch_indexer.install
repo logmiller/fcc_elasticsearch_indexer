@@ -1,0 +1,12 @@
+<?php
+
+/**
+ * IMPORTANT NOTICE: Set node_access for node types
+ * Otherwise it is going to bitch and moan about it not having a value.
+ * @see domain_default_node_access_settings()
+ * What in the hell is calling this?! *magic*
+ */
+function fcc_elasticsearch_indexer_update_6001() {
+    variable_set('domain_node_classified', array('DOMAIN_ACTIVE'));
+    variable_set('domain_node_legals', array('DOMAIN_ACTIVE'));
+}
