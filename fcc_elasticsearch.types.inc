@@ -8,29 +8,10 @@
  * @param type $batch_size
  * @return array
  */
-function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $batch_size) {
-    $query = new \EntityFieldQuery();
-
-    $result = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'article')
-        ->propertyOrderBy('created', 'DESC')
-        ->range($offset, $batch_size)
-        ->execute();
-
-    // Ensure we've got some node results.
-    if (!isset($result['node'])) {
-        drush_log("No nodes to process.", "ok");
-        return;
-    }
-
-    // Add the ids with the entity type to the $entities array
-    $ids = array_keys($result['node']);
-
+function _fcc_elasticsearch_indexer_node_article_to_documents($index, $offset, $batch_size) {
     // Load entities
-    $entities = entity_load('node', $ids);
-    unset($ids); // unset ids
-    unset($result); // close query
+    $entities = _fcc_es_process_node_entities('article', $offset, $batch_size);
+
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
@@ -127,29 +108,9 @@ function _fcc_elasticsearch_indexer_node_entity_to_documents($index, $offset, $b
  * @return array
  */
 function _fcc_elasticsearch_indexer_node_obituaries_to_documents($index, $offset, $batch_size) {
-    $query = new \EntityFieldQuery();
-
-    $result = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'obituaries')
-        ->propertyOrderBy('created', 'DESC')
-        ->range($offset, $batch_size)
-        ->execute();
-
-    // Ensure we've got some node results.
-    if (!isset($result['node'])) {
-        drush_log("No nodes to process.", "ok");
-        return;
-    }
-
-    // Add the ids with the entity type to the $entities array
-    $ids = array_keys($result['node']);
-
     // Load entities
-    $entities = entity_load('node', $ids);
+    $entities = _fcc_es_process_node_entities('obituaries', $offset, $batch_size);
 
-    unset($ids); // unset ids
-    unset($result); // close query
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
@@ -241,29 +202,9 @@ function _fcc_elasticsearch_indexer_node_obituaries_to_documents($index, $offset
  * @return array
  */
 function _fcc_elasticsearch_indexer_node_letters_to_documents($index, $offset, $batch_size) {
-    $query = new \EntityFieldQuery();
-
-    $result = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'letters')
-        ->propertyOrderBy('created', 'DESC')
-        ->range($offset, $batch_size)
-        ->execute();
-
-    // Ensure we've got some node results.
-    if (!isset($result['node'])) {
-        drush_log("No nodes to process.", "ok");
-        return;
-    }
-
-    // Add the ids with the entity type to the $entities array
-    $ids = array_keys($result['node']);
-
     // Load entities
-    $entities = entity_load('node', $ids);
+    $entities = _fcc_es_process_node_entities('letters', $offset, $batch_size);
 
-    unset($ids); // unset ids
-    unset($result); // close query
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
@@ -334,29 +275,9 @@ function _fcc_elasticsearch_indexer_node_letters_to_documents($index, $offset, $
  */
 function _fcc_elasticsearch_indexer_node_celebrations_to_documents($index, $offset, $batch_size) {
 
-    $query = new \EntityFieldQuery();
-
-    $result = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'celebrations')
-        ->propertyOrderBy('created', 'DESC')
-        ->range($offset, $batch_size)
-        ->execute();
-
-    // Ensure we've got some node results.
-    if (!isset($result['node'])) {
-        drush_log("No nodes to process.", "ok");
-        return;
-    }
-
-    // Add the ids with the entity type to the $entities array
-    $ids = array_keys($result['node']);
-
     // Load entities
-    $entities = entity_load('node', $ids);
+    $entities = _fcc_es_process_node_entities('celebrations', $offset, $batch_size);
 
-    unset($ids); // unset ids
-    unset($result); // close query
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
@@ -444,29 +365,9 @@ function _fcc_elasticsearch_indexer_node_celebrations_to_documents($index, $offs
  */
 function _fcc_elasticsearch_indexer_node_classified_to_documents($index, $offset, $batch_size) {
 
-    $query = new \EntityFieldQuery();
-
-    $result = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'classified')
-        ->propertyOrderBy('created', 'DESC')
-        ->range($offset, $batch_size)
-        ->execute();
-
-    // Ensure we've got some node results.
-    if (!isset($result['node'])) {
-        drush_log("No nodes to process.", "ok");
-        return;
-    }
-
-    // Add the ids with the entity type to the $entities array
-    $ids = array_keys($result['node']);
-
     // Load entities
-    $entities = entity_load('node', $ids);
+    $entities = _fcc_es_process_node_entities('classified', $offset, $batch_size);
 
-    unset($ids); // unset ids
-    unset($result); // close query
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
@@ -542,29 +443,10 @@ function _fcc_elasticsearch_indexer_node_classified_to_documents($index, $offset
  * @return array
  */
 function _fcc_elasticsearch_indexer_node_legals_to_documents($index, $offset, $batch_size) {
-    $query = new \EntityFieldQuery();
-
-    $result = $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'legals')
-        ->propertyOrderBy('created', 'DESC')
-        ->range($offset, $batch_size)
-        ->execute();
-
-    // Ensure we've got some node results.
-    if (!isset($result['node'])) {
-        drush_log("No nodes to process.", "ok");
-        return;
-    }
-
-    // Add the ids with the entity type to the $entities array
-    $ids = array_keys($result['node']);
 
     // Load entities
-    $entities = entity_load('node', $ids);
+    $entities = _fcc_es_process_node_entities('legals', $offset, $batch_size);
 
-    unset($ids); // unset ids
-    unset($result); // close query
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
@@ -617,4 +499,38 @@ function _fcc_elasticsearch_indexer_node_legals_to_documents($index, $offset, $b
     unset($entities); // unset entities
 
     return $document;
+}
+
+/**
+ * Process the node entities.
+ * @param type $node
+ * @param type $offset
+ * @param type $batch_size
+ * @return type
+ */
+function _fcc_es_process_node_entities($node_type, $offset, $batch_size) {
+    $query = new \EntityFieldQuery();
+
+    $result = $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', $node_type)
+        ->propertyOrderBy('created', 'DESC')
+        ->range($offset, $batch_size)
+        ->execute();
+
+    // Ensure we've got some node results.
+    if (!isset($result['node'])) {
+        drush_log("No nodes to process.", "ok");
+        return;
+    }
+
+    // Add the ids with the entity type to the $entities array
+    $ids = array_keys($result['node']);
+
+    // Load entities
+    $entities = entity_load('node', $ids);
+    unset($ids); // unset ids
+    unset($result); // close query
+
+    return $entities;
 }

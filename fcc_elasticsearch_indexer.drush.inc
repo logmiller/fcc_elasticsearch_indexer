@@ -89,7 +89,7 @@ function _drush_elastic_search_batch_indexing_create( $client, $index, $limit, $
 		$offset = 0;
 		for ( $count = 0; $count <= $limit; $count++ ) {
 			if ( $count % $batch_size == 0 ) { // Every n documents stop and send the bulk request
-				$document = _fcc_elasticsearch_indexer_node_entity_to_documents( $index, $offset, $batch_size );
+				$document = _fcc_elasticsearch_indexer_node_article_to_documents( $index, $offset, $batch_size );
 				$responses = $client->bulk( $document );
 				$offset = $count;
 				unset( $document );  // erase the old bulk request
