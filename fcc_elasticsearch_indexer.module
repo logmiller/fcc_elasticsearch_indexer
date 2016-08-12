@@ -43,8 +43,7 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 		'body' => array(),
 	);
 
-	_fcc_elasticsearch_indexer_prepare_fields( $params, $node );
-
+	$params = _fcc_elasticsearch_indexer_prepare_fields( $params, $node );
 	return $params;
 }
 
@@ -102,6 +101,12 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 	}
 
 	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
+
+	if ( ! fcc_es_index_exists( ES_NODE_ID, $client ) ) {
+		drupal_set_message( t( 'There was a problem updating this node in Elastic. (Index does not exist)' ) );
+		return;
+	}
+
 	$params = _fcc_elasticsearch_indexer_prepare_node( $node );
 
 	if ( ! $params ) {
@@ -133,6 +138,11 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 function fcc_elasticsearch_indexer_node_delete( $node ) {
 	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
 
+	if ( ! fcc_es_index_exists( ES_NODE_ID, $client ) ) {
+		drupal_set_message( t( 'There was a problem deleting this node in Elastic. (Index does not exist)' ) );
+		return;
+	}
+
 	// If the node is in Elastic, remove it
 	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
 	if ( $result && $result['hits']['total'] !== 1 ) {
@@ -155,6 +165,16 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 	drupal_set_message( t( 'The node has been deleted in Elastic.' ) );
 }
 
+/*------------------------------------------------------------------------------
+# FCC Custom Error Handling
+------------------------------------------------------------------------------*/
+function fcc_es_index_exists( $index, $client = null ) {
+	if ( ! $client ) {
+		$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
+	}
+	$index_exists = $client->indices()->exists( array( 'index' => $index ) );
+	return $index_exists;
+}
 
 /*------------------------------------------------------------------------------
 # FCC Custom Retrieval Functions

@@ -13,8 +13,9 @@
  * @return array
  */
 function _fcc_elasticsearch_indexer_prepare_fields( $params, $node ) {
-	if ( 'article' !== $node->type ) {
-		_fcc_elasticsearch_indexer_prepare_article( $params, $node );
+
+	if ( 'article' == $node->type ) {
+		$params = _fcc_elasticsearch_indexer_prepare_article( $params, $node );
 	} else {
 		drupal_set_message( t( 'There was a problem saving this node to Elastic - only the article node type is currently supported.' ) );
 		if ( drupal_is_cli() && function_exists( 'drush_main' ) ) { // Code is being run from drush.
@@ -22,6 +23,7 @@ function _fcc_elasticsearch_indexer_prepare_fields( $params, $node ) {
 			return;
 		}
 	}
+
 	return $params;
 }
 
