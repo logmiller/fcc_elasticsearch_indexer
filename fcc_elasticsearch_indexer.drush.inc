@@ -57,7 +57,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
             $limit = $query
                     ->entityCondition('entity_type', 'node')
                     ->entityCondition('bundle', $node_type)
-                    ->entityCondition('status', '1')
+                    ->propertyCondition( 'status', NODE_PUBLISHED )
                     ->count()->execute();
         }
 
