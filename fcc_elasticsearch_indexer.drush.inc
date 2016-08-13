@@ -8,37 +8,36 @@
 # Load Includes
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'progress.drush' );
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Implements hook_drush_command().
  */
 function fcc_elasticsearch_indexer_drush_command() {
-  $items = array();
-  $items['elastic-search-index'] = array(
-    'description' => 'Index items for one or all of the elastic search indexes.',
-    'examples' => array(
-      'drush elastic-search-index' => dt('Index items for all of the elastic search indexes.'),
-      'drush es-i' => dt('Alias to index items for all of the elastic search indexes.'),
-      'drush es-i 100' => dt("Index a maximum number of !limit items (index's cron batch size items per batch run) for the index name !name.", array('!limit' => 100, '!name' => 'fccnn')),
-      'drush es-i 100 10' => dt("Index a maximum number of !limit items (!batch_size items per batch run) for the index name !name.", array('!limit' => 100, '!batch_size' => 10, '!name' => 'fccnn')),
-      'drush es-i 0 100' => dt("Index all items of all indexes with !batch_size items per batch run.", array('!batch_size' => 100)),
-    ),
-    'arguments' => array(
-      'node_type' => dt("The node type being inserted."),
-      'limit' => dt("The number of items to index (index's cron batch size items per run). Set to 0 to index all items. Defaults to 0 (index all)."),
-      'batch_size' => dt("The number of items to index per batch run. Set to 0 to index all items at once. Defaults to the index's cron batch size."),
-    ),
-    'aliases' => array('es-i'),
-  );
+    $items = array();
+    $items['elastic-search-index'] = array(
+      'description' => 'Index items for one or all of the elastic search indexes.',
+      'examples' => array(
+        'drush elastic-search-index' => dt('Index items for all of the elastic search indexes.'),
+        'drush es-i' => dt('Alias to index items for all of the elastic search indexes.'),
+        'drush es-i article 100' => dt("Index a maximum number of !limit items (index's cron batch size items per batch run) by the node type !type.", array('!limit' => 100, '!type' => 'article')),
+        'drush es-i article 100 10' => dt("Index a maximum number of !limit items (!batch_size items per batch run) by the node type !type.", array('!limit' => 100, '!batch_size' => 10, '!type' => 'article')),
+        'drush es-i article 0 100' => dt("Index all items of all indexes with !batch_size items per batch run.", array('!batch_size' => 100)),
+      ),
+      'arguments' => array(
+        'node_type' => dt("The node type being inserted."),
+        'limit' => dt("The number of items to index (index's cron batch size items per run). Set to 0 to index all items. Defaults to 0 (index all)."),
+        'batch_size' => dt("The number of items to index per batch run. Set to 0 to index all items at once. Defaults to the index's cron batch size."),
+      ),
+      'aliases' => array('es-i'),
+    );
 
-  return $items;
+    return $items;
 }
 
 /**
  * Index items.
  *
- * @param string $index
- *   The index name for which items should be indexed.
+ * @param string $node_type
+ *   The node type of the items being indexed.
  * @param integer $limit
  *   Maximum number of items to index.
  * @param integer $batch_size
@@ -57,7 +56,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
             $limit = $query
                     ->entityCondition('entity_type', 'node')
                     ->entityCondition('bundle', $node_type)
-                    ->propertyCondition( 'status', NODE_PUBLISHED )
+                    ->propertyCondition('status', NODE_PUBLISHED)
                     ->count()->execute();
         }
 
@@ -82,6 +81,8 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
  *
  * @param $client
  *   The elastic search cluster.
+ * @param string $node_type
+ *   The node type of the items being indexed.
  * @param int $limit
  *   (optional) The maximum number of items to index, or NULL to index all
  *   items.
@@ -91,30 +92,31 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
  * @return bool
  *   TRUE if batch was created, FALSE otherwise.
  */
-function _drush_elastic_search_batch_indexing_create( $client, $node_type, $limit, $batch_size ) {
+function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $batch_size) {
 
-	// Get the number of remaining items to index.
-	try {
-		// ELASTICSEARCH BULK INDEX
-		$total = ceil( ( $limit / $batch_size ) ); // Set total batches for the progress bar
-		$bar = drush_create_progress();
-		//Create index and mapping
-		$offset = 0;
-		for ( $count = 0; $count <= $limit; $count++ ) {
-			if ( $count % $batch_size == 0 ) { // Every n documents stop and send the bulk request
-                                //TODO: dynamic switch bulk indexer between node_type
-				$document = _fcc_elasticsearch_indexer_node_article_to_documents( 'fccnn', $offset, $batch_size );
-				$responses = $client->bulk( $document );
-				$offset = $count;
-				unset( $document );  // erase the old bulk request
-				unset( $responses ); // unset  to save memory
-				$bar->setProgress( $total, $count );
-			}
-		}
-		$bar->end();
-	} catch (Exception $ex) {
-		drush_log( $ex->getMessage(), 'error' );
-	}
+    // Get the number of remaining items to index.
+    try {
+        // ELASTICSEARCH BULK INDEX
+        $total = ceil(( $limit / $batch_size)); // Set total batches for the progress bar
+        $bar = drush_create_progress();
+        //Create index and mapping
+        $offset = 0;
+        for ($count = 0; $count <= $limit; $count++) {
+            if ($count % $batch_size == 0) { // Every n documents stop and send the bulk request
+                //TODO: dynamic switch bulk indexer between node_type
+                $document = _fcc_elasticsearch_indexer_node_article_to_documents('fccnn', $offset, $batch_size);
+                $responses = $client->bulk($document);
+                $offset = $count;
+                unset($document);  // erase the old bulk request
+                unset($responses); // unset  to save memory
+                $bar->setProgress($total, $count);
+            }
+        }
+        $bar->end();
+    }
+    catch (Exception $ex) {
+        drush_log($ex->getMessage(), 'error');
+    }
 }
 
 /**
