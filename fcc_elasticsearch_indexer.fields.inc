@@ -77,10 +77,11 @@ function fcc_es_get_url( $node ) {
 		$url = $node->field_override_url[ $node->language ][0]['value']; // URL Override // TODO test
 	} else {
 		//$url = url( 'node/' . $node->nid ); // No URL Override
+		//$url = $_SERVER['HTTP_HOST'] . $url;
+		$newspaper = fcc_es_get_data_field_value( 'field_newspaper', $node );
+		$subdomain = fcc_es_newspaper_to_subdomain( $newspaper );
+		$url = $subdomain . '/node/' . $node->nid; // No URL Override
 	}
-
-	$url = $_SERVER['HTTP_HOST'] . $url;
-
 	return $url;
 }
 
@@ -406,4 +407,21 @@ function fcc_es_get_data_field_value( $field, $entity, $input = 'value' ) {
 	}
 	unset( $entity_field ); //unset entity field
 	return $value;
+}
+
+function fcc_es_newspaper_to_subdomain( $newspaper ) {
+	$site_name = $newspaper;
+	if ( $newspaper ) {
+		$site_name = $newspaper;
+	} else {
+		$site_name = 'FCCNN';
+	}
+	$domain_id = _es_get_sitename_domain_id( $site_name );
+	if ( function_exists( 'domain_lookup' ) ) {
+		$subdomain = domain_lookup( $domain_id )['subdomain'];
+	}
+	if ( ! $subdomain ) {
+		$subdomain = _es_get_subdomain( $domain_id );
+	}
+	return $subdomain;
 }

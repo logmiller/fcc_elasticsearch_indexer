@@ -97,7 +97,7 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'domains' => fcc_es_get_domains_field( $node ),
 		'subdomains' => $node->subdomains,
 		'domain_site' => $node->domain_site,
-		'url' => fcc_es_get_url( $node ), // TODO parent_url
+		'url' => fcc_es_get_url( $node ),
 		'path' => $node->path['source'], // TODO: Verify/Test
 		'video' => fcc_es_get_file_fields( 'field_video', $node ), // TODO: Verify/Test
 		'audio' => fcc_es_get_file_fields( 'field_audio', $node ), // TODO: Verify/Test

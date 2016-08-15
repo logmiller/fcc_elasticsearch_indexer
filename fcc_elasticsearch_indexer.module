@@ -13,6 +13,7 @@ module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.type
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.parameters' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.fields' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.sitenames' );
+module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.subdomains' );
 
 
 /*------------------------------------------------------------------------------
