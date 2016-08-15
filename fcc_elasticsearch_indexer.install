@@ -1,11 +1,53 @@
 <?php
 
 /**
+ * Implements hook_schema().
+ */
+function fcc_elasticsearch_indexer_schema() {
+    $schema['elasticsearch_reindex'] = array(
+      'description' => 'Indexer for elasticsearch. Contains nodes that need to be reindexed.',
+      'fields' => array(
+        'nid' => array(
+          'description' => 'The primary identifier for a node.',
+          'type' => 'int',
+          'length' => 10,
+          'not null' => TRUE,
+        ),
+        'type' => array(
+          'description' => 'The node_type.type of this node.',
+          'type' => 'varchar',
+          'length' => 32,
+          'not null' => TRUE,
+        ),
+      ),
+      'indexes' => array(
+        'es_node_id' => array('nid'),
+      ),
+      'foreign keys' => array(
+        'node' => array(
+          'table' => 'node',
+          'columns' => array('nid' => 'nid'),
+        ),
+      ),
+      'primary key' => array('nid'),
+    );
+    return $schema;
+}
+
+/**
  * IMPORTANT NOTICE: Set node_access for node types
  * @see domain_default_node_access_settings()
  * What is calling this?
  */
-function fcc_elasticsearch_indexer_update_6001() {
+function fcc_elasticsearch_indexer_update_7001() {
     variable_set('domain_node_classified', array('DOMAIN_ACTIVE'));
     variable_set('domain_node_legals', array('DOMAIN_ACTIVE'));
+}
+
+/**
+ * Install schema.
+ * @see hook_update()
+ */
+function fcc_breaking_alerts_update_7002() {
+    drupal_install_schema('elasticsearch_reindex');
 }
