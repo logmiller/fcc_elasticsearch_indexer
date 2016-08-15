@@ -5,8 +5,8 @@
 ------------------------------------------------------------------------------*/
 
 # Declare Constants
-define( 'DEFAULT_CLUSTER_ID', 'elasticsearch' ); // TODO make dynamic?
-define( 'ES_NODE_ID', 'fccnn' );  // TODO make dynamic?
+define( 'DEFAULT_CLUSTER_ID', elasticsearch_connector_get_default_connector() ); // Name of the target ElasticSearch cluser. (Set in the ES Connector Module)
+define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index. // TODO make selectable in admin?
 
 # Load Includes
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.types' );
@@ -33,9 +33,12 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 	// Populate the document metadata
 	$params = _fcc_elasticsearch_indexer_prepare_document_metadata( $node );
 
-	// Populate the document body fields based on article type
+	// Populate the document fields based on article type
 	if ( 'article' == $node->type ) {
-		$params = _fcc_elasticsearch_indexer_prepare_article( $params, $node );
+		$fields = _fcc_elasticsearch_indexer_prepare_article( $params, $node );
+		foreach ( $fields as $key => $value ) { // Add the body fields to the document metadata
+			$params['body'][ $key ] = $value;
+		}
 	} else {
 		if ( drupal_is_cli() && function_exists( 'drush_main' ) ) { // Drush
 			drush_set_error( 'Error: node type is currently unsupported.' );
@@ -57,7 +60,7 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
  */
 function _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node ) {
 	$search = array(
-		'index' => ES_NODE_ID,
+		'index' => ES_INDEX,
 		'type' => $node->type,
 		'version' => true,
 		'body' => array(
@@ -107,7 +110,7 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 
 	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
 
-	if ( ! fcc_es_index_exists( ES_NODE_ID, $client ) ) {
+	if ( ! fcc_es_index_exists( ES_INDEX, $client ) ) {
 		drupal_set_message( t( 'There was a problem updating this node in Elastic. (Index does not exist)' ) );
 		return;
 	}
@@ -145,7 +148,7 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 function fcc_elasticsearch_indexer_node_delete( $node ) {
 	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
 
-	if ( ! fcc_es_index_exists( ES_NODE_ID, $client ) ) {
+	if ( ! fcc_es_index_exists( ES_INDEX, $client ) ) {
 		drupal_set_message( t( 'There was a problem deleting this node in Elastic. (Index does not exist)' ) );
 		return;
 	}
@@ -158,7 +161,7 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 	}
 
 	$params = array(
-	  'index' => ES_NODE_ID, // TODO make dynamic for property name
+	  'index' => ES_INDEX,
 	  'type' => $node->type,
 	  'id' => $result['hits']['hits'][0]['_id'],
 	);

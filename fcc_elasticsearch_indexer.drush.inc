@@ -93,6 +93,8 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
  *   TRUE if batch was created, FALSE otherwise.
  */
 function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $batch_size) {
+		// Set the index name
+    $index = ES_NODE_ID;
 
     // Get the number of remaining items to index.
     try {
@@ -104,8 +106,9 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
         for ($count = 0; $count <= $limit; $count++) {
             if ($count % $batch_size == 0) { // Every n documents stop and send the bulk request
                 //TODO: dynamic switch bulk indexer between node_type
-                $document = _fcc_elasticsearch_indexer_node_article_to_documents('fccnn', $offset, $batch_size);
+                $document = _fcc_elasticsearch_indexer_node_article_to_documents($index, $offset, $batch_size); // TODO update index name declaration?
                 $responses = $client->bulk($document);
+									//print_r( $responses ); // indexing success/fail response from elasticsearch // TODO: remove after testing
                 $offset = $count;
                 unset($document);  // erase the old bulk request
                 unset($responses); // unset  to save memory

@@ -10,32 +10,113 @@
 ------------------------------------------------------------------------------*/
 
 /**
+ * Retrieve the body fields.
+ *
+ * @param $node entity
+ * @return array
+ */
+function fcc_es_get_body_fields( $node ) {
+	$body = $node->body[ LANGUAGE_NONE ][0];
+
+	$body_fields = array();
+	$body_fields['value'] = $body['value'];
+	$body_fields['summary'] = $body['summary'];
+	$body_fields['safe_value'] = strip_tags( $body['safe_value'] );
+	$body_fields['safe_summary'] = strip_tags( $body['safe_summary'] );
+
+	return $body_fields;
+}
+
+/**
+ * Retrieve the domains field.
+ *
+ * @param $node entity
+ * @return array
+ */
+function fcc_es_get_domains_field( $node ) {
+	$domains = $node->domains;
+
+	if ( $domains ) {
+		$domains_field = array_values( $domains );
+	} else {
+		$domains_field = array();
+	}
+
+	return $domains_field;
+}
+
+/**
+ * Retrieve the published date field.
+ *
+ * @param $node entity
+ * @return array
+ */
+function fcc_es_get_published_date( $node ) {
+	$published = $node->workbench_moderation['published'];
+
+	if ( $published ) {
+		$published_date = $published;
+	} else {
+		$published_date = $node->created;
+	}
+
+	return $published_date;
+}
+
+/**
+ * Retrieve the published date field.
+ *
+ * @param $node entity
+ * @return array
+ */
+function fcc_es_get_url( $node ) {
+
+	// Add the article 'URL' link
+	// NOTE leave protocol off for now
+	if ( ! empty( $node->field_override_url ) ) {
+		$url = $node->field_override_url[ $node->language ][0]['value']; // URL Override // TODO test
+	} else {
+		//$url = url( 'node/' . $node->nid ); // No URL Override
+	}
+
+	$url = $_SERVER['HTTP_HOST'] . $url;
+
+	return $url;
+}
+
+/**
  * Retrieve the author fields.
  *
- * @param type $nid
- * @param type $uid
+ * @param $node entity
+ * @return array
  */
-function fcc_es_get_author_fields( $nid, $uid ) {
+function fcc_es_get_author_fields( $node ) {
+	$nid = $node->nid;
+	$uid = $node->uid;
 	$author = array();
-	if ( $uid > 1 ) {
+	if ( $uid >= 1 ) {
 		$user = user_load( $uid );
 		// Author name
+		//$author['uid'] = $uid; // NOTE: probably don't need (duplicate)
+		//$author['name'] = $user->name; // NOTE: probably don't need (duplicate)
 		$author['realname'] = fcc_es_get_author_name( $user, $nid );
-		$author['name'] = $user->name;
-		$author['url'] = url( drupal_get_path_alias( 'user/$uid' ) );
-		if ( ! empty( $user->picture ) ) {
+		$author['first_name'] = ( ! empty( $user->first_name ) ) ? $user->field_first_name[ LANGUAGE_NONE ][0]['value'] : '';
+		$author['last_name'] = ( ! empty( $user->last_name ) ) ? $user->field_last_name[ LANGUAGE_NONE ][0]['value'] : '';
+		//$author['url'] = url( drupal_get_path_alias( 'user/$uid' ) ); // NOTE: probably don't need (index in USER type)
+		/*if ( ! empty( $user->picture ) ) { // NOTE: probably don't need (index in USER type)
 			$author['picture'] = array(
 				'uri' => $user->picture->uri,
 				'width' => $user->picture->image_dimensions['width'],
 				'height' => $user->picture->image_dimensions['height'],
 			);
-		}
-		$author['byline'] = "By <a href='{$author['url']}'>{$author['name']}</a>";
-		$author['bio'] = ( ! empty( $user->field_bio ) ) ? $user->field_bio[ LANGUAGE_NONE ][0]['value'] : '';
-		$author['email'] = ( ! empty( $user->mail ) ) ? $user->mail : '';
-		$author['phone'] = ( ! empty( $user->field_phone_number ) ) ? $user->field_phone_number[ LANGUAGE_NONE ][0]['value'] : '';
-		$author['twitter'] = ( ! empty( $user->twitter ) ) ? $user->field_twitter[ LANGUAGE_NONE ][0]['value'] : '';
-		$author['google'] = ( ! empty( $user->field_google_plus ) ) ? $user->field_google_plus[ LANGUAGE_NONE ][0]['value'] : '';
+		}*/
+		// NOTE: probably don't need any of the below (index in USER type)
+		//$author['byline'] = "By <a href='{$author['url']}'>{$author['name']}</a>";
+		//$author['bio'] = ( ! empty( $user->field_bio ) ) ? $user->field_bio[ LANGUAGE_NONE ][0]['value'] : '';
+		//$author['email'] = ( ! empty( $user->mail ) ) ? $user->mail : '';
+		//$author['phone'] = ( ! empty( $user->field_phone_number ) ) ? $user->field_phone_number[ LANGUAGE_NONE ][0]['value'] : '';
+		//$author['twitter'] = ( ! empty( $user->twitter ) ) ? $user->field_twitter[ LANGUAGE_NONE ][0]['value'] : '';
+		//$author['google'] = ( ! empty( $user->field_google_plus ) ) ? $user->field_google_plus[ LANGUAGE_NONE ][0]['value'] : '';
 	}
 	return $author;
 }
@@ -59,6 +140,38 @@ function fcc_es_get_author_name( $author, $node ) {
 		endif;
 	endif;
 	return $author_name;
+}
+
+/**
+ * Retrieve the images fields.
+ *
+ * @param $node entity
+ * @return array
+ */
+// TODO: Finish
+function fcc_es_get_image_fields( $node ) {
+	$image_field = $node->field_image[ LANGUAGE_NONE ];
+	if ( ! empty( $image_field ) ) {
+		$images = array_map(function( $img ) {
+			$img_alt = $img['alt'];
+			$img_description = $img['description'];
+			$img = file_load( $img['fid'] );
+			$img->url = ( ! empty( $image_field[0]['uri'] ) ) ? file_create_url( $img_uri[0]['uri'] ) : file_create_url( $img->uri );
+			$img->full_1000 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( 'full_1000', $image_field[0]['uri'] ) : file_create_url( $img->uri );
+			$img->featured_860 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_860', $image_field[0]['uri'] ) : file_create_url( $img->uri );
+			$img->featured_620 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_620', $image_field[0]['uri'] ) : file_create_url( $img->uri );
+			$img->featured_430 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_430', $image_field[0]['uri'] ) : file_create_url( $img->uri );
+			$img->featured_315 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_315', $image_field[0]['uri'] ) : file_create_url( $img->uri );
+			$img->square_300 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( 'square_300', $image_field[0]['uri'] ) : file_create_url( $img->uri );
+			$img->medium = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( 'medium', $image_field[0]['uri'] ) : file_create_url( $img->uri );
+			$img->image_caption = htmlentities( $img_alt, ENT_QUOTES, 'UTF-8' );
+			$img->image_description = $img_description;
+			return $img;
+		}, $image_field );
+	}
+	$images = (array) $images['0'];
+	unset( $images['rdf_mapping'] );
+	return $images;
 }
 
 /**
@@ -237,7 +350,7 @@ function fcc_es_get_letter_fields( $entity ) {
    $letter = array();
 
    // Publisher
-   $publisher = fcc_es_get_author_fields($entity->nid, $entity->uid);
+   $publisher = fcc_es_get_author_fields( $entity );
    $letter['publisher']['info'] = $publisher;
    $letter['publisher']['name'] = $publisher['name'];
    unset($publisher); // unset publisher
