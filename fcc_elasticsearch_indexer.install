@@ -43,11 +43,3 @@ function fcc_elasticsearch_indexer_update_7001() {
     variable_set('domain_node_classified', array('DOMAIN_ACTIVE'));
     variable_set('domain_node_legals', array('DOMAIN_ACTIVE'));
 }
-
-/**
- * Install schema.
- * @see hook_update()
- */
-function fcc_elasticsearch_indexer_update_7002() {
-    drupal_install_schema('elasticsearch_reindex');
-}
