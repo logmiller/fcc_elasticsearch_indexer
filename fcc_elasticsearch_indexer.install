@@ -4,7 +4,7 @@
  * Implements hook_schema().
  */
 function fcc_elasticsearch_indexer_schema() {
-    $schema['elasticsearch_reindex'] = array(
+    $schema['elasticsearch_logs'] = array(
       'description' => 'Indexer for elasticsearch. Contains nodes that need to be reindexed.',
       'fields' => array(
         'nid' => array(
@@ -18,6 +18,18 @@ function fcc_elasticsearch_indexer_schema() {
           'type' => 'varchar',
           'length' => 32,
           'not null' => TRUE,
+        ),
+        'log_time' => array(
+          'description' => 'Unix timestamp of when event occurred.',
+          'type' => 'int',
+          'length' => 11,
+          'not null' => TRUE,
+        ),
+        'message' => array(
+          'description' => 'Text of log message to be passed into the t() function.',
+          'type' => 'text',
+          'not null' => TRUE,
+          'size' => 'big',
         ),
       ),
       'indexes' => array(

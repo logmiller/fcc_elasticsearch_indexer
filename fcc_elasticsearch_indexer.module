@@ -192,3 +192,20 @@ function fcc_es_index_exists( $index, $client = null ) {
 	$index_exists = $client->indices()->exists( array( 'index' => $index ) );
 	return $index_exists;
 }
+
+/**
+ * Push errors to 'elasticsearch_reindex' table.
+ * @param type $responses
+ */
+function _fcc_elasticsearch_set_error_log($responses) {
+    foreach ($responses['items'] AS $items) {
+        db_insert('elasticsearch_logs')
+            ->fields(array(
+              'nid' => $items['index']['_id'],
+              'type' => $items['index']['_type'],
+              'log_time' => REQUEST_TIME,
+              'message' => json_encode($items['index']['error']),
+            ))
+            ->execute();
+    }
+}
