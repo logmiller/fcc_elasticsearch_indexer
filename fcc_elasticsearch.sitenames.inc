@@ -17,8 +17,8 @@ function _es_get_sitename_domain_id( $site_name ) {
 			break;
 
 		case 'Bemidji Pioneer':
-			# www.inforum.com
-			$index_name = '2';
+			# www.bemidjipioneer.com
+			$domain_id = '2';
 			break;
 
 		case 'Agweek':
