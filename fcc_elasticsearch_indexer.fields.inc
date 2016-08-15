@@ -52,7 +52,7 @@ function fcc_es_get_domains_field( $node ) {
  * @return array
  */
 function fcc_es_get_published_date( $node ) {
-	$published = $node->workbench_moderation['published']['timestamp'];
+	$published = $node->workbench_moderation['published']->timestamp;
 
 	if ( $published ) {
 		$published_date = $published;
