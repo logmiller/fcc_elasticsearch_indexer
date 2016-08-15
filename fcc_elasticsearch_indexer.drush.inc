@@ -6,7 +6,7 @@
  */
 
 # Load Includes
-module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'progress.drush' );
+include_once 'progress.drush.inc';
 
 /**
  * Implements hook_drush_command().
