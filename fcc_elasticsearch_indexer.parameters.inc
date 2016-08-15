@@ -118,3 +118,197 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 	//print_r( $fields ); // For Debugging. TODO: remove before production
 	return $fields;
 }
+
+/**
+ * 'Obituaries' Node Type
+ *
+ * @param array $params
+ * @param object $node
+ * @return array
+ */
+function _fcc_elasticsearch_indexer_prepare_obituaries( $node ) {
+	// TODO: Move to "Types"? Remove $params?
+
+	$fields = array(
+		'nid' => $node->nid,
+		'type' => $node->type,
+		'post_date' => date( 'Y-m-d H:i:s', $node->created ),
+		'title' => $node->title,
+		'name' => $node->name,
+		'uid' => $node->uid,
+		'picture' => $node->picture,
+		'created' => $node->created,
+		'published' => fcc_es_get_published_date( $node ),
+		'revision_timestamp' => $node->revision_timestamp,
+		'revision_uid' => $node->revision_uid,
+		'vid' => $node->vid,
+		'status' => $node->status,
+		'promote' => $node->promote,
+		'sticky' => $node->sticky,
+		'newspaper' => fcc_es_get_data_field_value( 'field_newspaper', $node ),
+		'parent_domain' => null, // TODO
+		'domains' => fcc_es_get_domains_field( $node ),
+		'subdomains' => $node->subdomains,
+		'domain_site' => $node->domain_site,
+		'url' => fcc_es_get_url( $node ),
+		'path' => $node->path['source'], // TODO: Verify/Test  
+                'body' => fcc_es_get_body_fields( $node ),
+                'field_image' => fcc_es_get_image_fields( $node ), // TODO: Verify/Test
+                'funeral_home' => null, // TODO: Fix
+                'lifespan' => null, // TODO: Fix
+                'logo' => null, // TODO: Fix
+                'location' => null, // TODO: Fix
+	);
+
+	// single post only (if not bulk)
+	/*foreach ( $fields as $key => $value ) {
+		$params['body'][ $key ] = $value;
+	}*/
+
+	//print_r( $fields ); // For Debugging. TODO: remove before production
+	return $fields;
+}
+
+
+/**
+ * 'Letters' Node Type
+ *
+ * @param array $params
+ * @param object $node
+ * @return array
+ */
+function _fcc_elasticsearch_indexer_prepare_letters( $node ) {
+	// TODO: Move to "Types"? Remove $params?
+
+	$fields = array(
+          	'nid' => $node->nid,
+		'type' => $node->type,
+		'post_date' => date( 'Y-m-d H:i:s', $node->created ),
+		'title' => $node->title,
+		'name' => $node->name,
+		'uid' => $node->uid,
+		'picture' => $node->picture,
+		'created' => $node->created,
+		'published' => fcc_es_get_published_date( $node ),
+		'revision_timestamp' => $node->revision_timestamp,
+		'revision_uid' => $node->revision_uid,
+		'vid' => $node->vid,
+		'status' => $node->status,
+		'promote' => $node->promote,
+		'sticky' => $node->sticky,
+		'newspaper' => fcc_es_get_data_field_value( 'field_newspaper', $node ),
+		'parent_domain' => null, // TODO
+		'domains' => fcc_es_get_domains_field( $node ),
+		'subdomains' => $node->subdomains,
+		'domain_site' => $node->domain_site,
+		'url' => fcc_es_get_url( $node ),
+		'path' => $node->path['source'], // TODO: Verify/Test
+                'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ), // TODO: Fix
+                'tags' => fcc_es_get_taxonomy_terms( 'field_tags', $node ), // TODO: Fix
+                'body' => fcc_es_get_body_fields( $node ),
+                'author' => null, //TODO: Fix
+                'publisher' => null, // TODO: Fix
+	);
+
+	// single post only (if not bulk)
+	/*foreach ( $fields as $key => $value ) {
+		$params['body'][ $key ] = $value;
+	}*/
+
+	//print_r( $fields ); // For Debugging. TODO: remove before production
+	return $fields;
+}
+
+/**
+ * 'Legals' Node Type
+ *
+ * @param array $params
+ * @param object $node
+ * @return array
+ */
+function _fcc_elasticsearch_indexer_prepare_legals( $node ) {
+	// TODO: Move to "Types"? Remove $params?
+
+	$fields = array(
+		'nid' => $node->nid,
+		'type' => $node->type,
+		'post_date' => date( 'Y-m-d H:i:s', $node->created ),
+		'title' => $node->title,
+		'name' => $node->name,
+		'uid' => $node->uid,
+		'picture' => $node->picture,
+		'created' => $node->created,
+		'published' => fcc_es_get_published_date( $node ),
+		'revision_timestamp' => $node->revision_timestamp,
+		'revision_uid' => $node->revision_uid,
+		'vid' => $node->vid,
+		'status' => $node->status,
+		'promote' => $node->promote,
+		'sticky' => $node->sticky,
+		'newspaper' => fcc_es_get_data_field_value( 'field_newspaper', $node ),
+		'parent_domain' => null, // TODO
+		'domains' => fcc_es_get_domains_field( $node ),
+		'subdomains' => $node->subdomains,
+		'domain_site' => $node->domain_site,
+		'url' => fcc_es_get_url( $node ),
+		'path' => $node->path['source'], // TODO: Verify/Test  
+                'body' => fcc_es_get_body_fields( $node ),
+	);
+
+	// single post only (if not bulk)
+	/*foreach ( $fields as $key => $value ) {
+		$params['body'][ $key ] = $value;
+	}*/
+
+	//print_r( $fields ); // For Debugging. TODO: remove before production
+	return $fields;
+}
+
+/**
+ * 'Celebrations' Node Type
+ *
+ * @param array $params
+ * @param object $node
+ * @return array
+ */
+function _fcc_elasticsearch_indexer_prepare_celebrations( $node ) {
+	// TODO: Move to "Types"? Remove $params?
+
+	$fields = array(
+		'nid' => $node->nid,
+		'type' => $node->type,
+		'post_date' => date( 'Y-m-d H:i:s', $node->created ),
+		'title' => $node->title,
+		'name' => $node->name,
+		'uid' => $node->uid,
+		'picture' => $node->picture,
+		'created' => $node->created,
+		'published' => fcc_es_get_published_date( $node ),
+		'revision_timestamp' => $node->revision_timestamp,
+		'revision_uid' => $node->revision_uid,
+		'vid' => $node->vid,
+		'status' => $node->status,
+		'promote' => $node->promote,
+		'sticky' => $node->sticky,
+		'newspaper' => fcc_es_get_data_field_value( 'field_newspaper', $node ),
+		'parent_domain' => null, // TODO
+		'domains' => fcc_es_get_domains_field( $node ),
+		'subdomains' => $node->subdomains,
+		'domain_site' => $node->domain_site,
+		'url' => fcc_es_get_url( $node ),
+		'path' => $node->path['source'], // TODO: Verify/Test  
+                'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ), // TODO: Fix
+                'body' => fcc_es_get_body_fields( $node ),
+                'field_image' => fcc_es_get_image_fields( $node ), // TODO: Verify/Test*/
+	);
+
+	// single post only (if not bulk)
+	/*foreach ( $fields as $key => $value ) {
+		$params['body'][ $key ] = $value;
+	}*/
+
+	//print_r( $fields ); // For Debugging. TODO: remove before production
+	return $fields;
+}
+
+

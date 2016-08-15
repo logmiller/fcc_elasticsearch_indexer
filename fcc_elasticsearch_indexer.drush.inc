@@ -106,11 +106,12 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
         for ($count = 0; $count <= $limit; $count++) {
             if ($count % $batch_size == 0) { // Every n documents stop and send the bulk request
                 //TODO: dynamic switch bulk indexer between node_type
-                $document = _fcc_elasticsearch_indexer_node_article_to_documents($index, $offset, $batch_size); // TODO update index name declaration?
+                $document = _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size); // TODO update index name declaration?
                 $responses = $client->bulk($document);
 
                 // indexing success/fail response from elasticsearch
                 if ($responses['errors'] > 0) {
+                    drush_set_error('Error in bulk insert. Please check the logs.');
                     _fcc_elasticsearch_set_error_log($responses);
                 }
 

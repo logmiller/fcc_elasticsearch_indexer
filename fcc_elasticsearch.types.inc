@@ -8,16 +8,16 @@
  * @param type $batch_size
  * @return array
  */
-function _fcc_elasticsearch_indexer_node_article_to_documents($index, $offset, $batch_size) {
+function _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size) {
     // Load entities
-    $entities = _fcc_es_process_node_entities('article', $offset, $batch_size);
+    $entities = _fcc_es_process_node_entities($node_type, $offset, $batch_size);
 
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
     $document = array();
     foreach ($entities as $entity) {
 			$document['body'][] = [ 'index' => _fcc_elasticsearch_indexer_prepare_bulk_document_metadata( $entity ) ];
-			$document['body'][] = _fcc_elasticsearch_indexer_prepare_article( $entity ); // Body Fields
+                        $document['body'][] = call_user_func('_fcc_elasticsearch_indexer_prepare_' . $node_type, $entity); // Body Fields
     }
     unset($entities); // unset entities
     return $document;
