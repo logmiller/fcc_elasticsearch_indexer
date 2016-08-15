@@ -198,7 +198,7 @@ function fcc_es_get_taxonomy_terms($field, $entity) {
        }
        unset($entity_field);
    }
-   return $terms;
+   return $terms['tags'];
 }
 
 /**
