@@ -409,6 +409,12 @@ function fcc_es_get_data_field_value( $field, $entity, $input = 'value' ) {
 	return $value;
 }
 
+/**
+ * Returns subdomain address based on parent newspaper
+ *
+ * @param string $newspaper
+ * @return type
+ */
 function fcc_es_newspaper_to_subdomain( $newspaper ) {
 	$site_name = $newspaper;
 	if ( $newspaper ) {
@@ -417,11 +423,11 @@ function fcc_es_newspaper_to_subdomain( $newspaper ) {
 		$site_name = 'FCCNN';
 	}
 	$domain_id = _es_get_sitename_domain_id( $site_name );
-	if ( function_exists( 'domain_lookup' ) ) {
+	/*if ( function_exists( 'domain_lookup' ) ) {
 		$subdomain = domain_lookup( $domain_id )['subdomain'];
-	}
-	if ( ! $subdomain ) {
+	}*/
+	//if ( ! $subdomain ) {
 		$subdomain = _es_get_subdomain( $domain_id );
-	}
+	//}
 	return $subdomain;
 }
