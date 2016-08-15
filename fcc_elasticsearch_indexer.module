@@ -199,9 +199,9 @@ function fcc_es_index_exists( $index, $client = null ) {
  */
 function _fcc_elasticsearch_set_error_log($responses) {
     foreach ($responses['items'] AS $items) {
-        db_insert('elasticsearch_logs')
+        db_merge('elasticsearch_logs')
+            ->key(array('nid' => $items['index']['_id']))
             ->fields(array(
-              'nid' => $items['index']['_id'],
               'type' => $items['index']['_type'],
               'log_time' => REQUEST_TIME,
               'message' => json_encode($items['index']['error']),
