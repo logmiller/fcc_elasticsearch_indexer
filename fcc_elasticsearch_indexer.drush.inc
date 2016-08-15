@@ -48,8 +48,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
         return;
     }
     // Check if node type is of supported node types
-    $supported_node_types = array('article', 'obituaries', 'letters', 'legals', 'celebrations');
-    if (in_array($node_type, $supported_node_types)) {
+    if ( fcc_es_is_supported_node_type( $node_type ) ) {
         // Get total count if limit isn't set
         if (empty($limit)) {
             $query = new \EntityFieldQuery();

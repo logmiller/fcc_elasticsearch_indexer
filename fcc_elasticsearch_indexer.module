@@ -10,7 +10,7 @@ define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index. // TO
 
 # Load Includes
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.types' );
-module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.parameters' );
+module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.prepare' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.fields' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.sitenames' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.subdomains' );
@@ -35,8 +35,8 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 	$params = _fcc_elasticsearch_indexer_prepare_document_metadata( $node );
 
 	// Populate the document fields based on article type
-	if ( 'article' == $node->type ) {
-		$fields = _fcc_elasticsearch_indexer_prepare_article( $params, $node );
+	if ( fcc_es_is_supported_node_type( $node->type ) ) {
+		$fields = call_user_func( '_fcc_elasticsearch_indexer_prepare_' . $node->type, $node );
 		foreach ( $fields as $key => $value ) { // Add the body fields to the document metadata
 			$params['body'][ $key ] = $value;
 		}

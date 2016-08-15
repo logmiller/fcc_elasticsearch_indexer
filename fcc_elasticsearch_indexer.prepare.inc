@@ -1,32 +1,9 @@
 <?php
 
 /**
- * @file fcc_elasticsearch_indexer.parameters.inc
+ * @file fcc_elasticsearch_indexer.prepare.inc
  * Indexing Functions for node field parameters
  */
-
-/**
- * Helper routing function to prepare field parameters based on node type.
- *
- * @param array $params
- * @param object $node
- * @return array
- */
-function _fcc_elasticsearch_indexer_prepare_fields( $params, $node ) {
-	// TODO: Remove if unnecessary
-
-	if ( 'article' == $node->type ) {
-		$params = _fcc_elasticsearch_indexer_prepare_article( $params, $node );
-	} else {
-		drupal_set_message( t( 'There was a problem saving this node to Elastic - only the article node type is currently supported.' ) );
-		if ( drupal_is_cli() && function_exists( 'drush_main' ) ) { // Code is being run from drush.
-			drush_set_error( 'Error: only the article node type is currently supported.' );
-			return;
-		}
-	}
-
-	return $params;
-}
 
 /**
  * Prepares the document metadata for single document indexing
@@ -65,6 +42,18 @@ function _fcc_elasticsearch_indexer_prepare_bulk_document_metadata( $node ) {
 	return $params;
 }
 
+/**
+ * Validates supported node types
+ *
+ * @param string $node_type
+ * @return bool
+ */
+function fcc_es_is_supported_node_type( $node_type ) {
+	$supported_node_types = array( 'article', 'obituaries', 'letters', 'legals', 'celebrations' );
+	if ( in_array( $node_type, $supported_node_types ) ) {
+		return true;
+	}
+}
 
 /**
  * 'Article' Node Type
@@ -151,7 +140,7 @@ function _fcc_elasticsearch_indexer_prepare_obituaries( $node ) {
 		'subdomains' => $node->subdomains,
 		'domain_site' => $node->domain_site,
 		'url' => fcc_es_get_url( $node ),
-		'path' => $node->path['source'], // TODO: Verify/Test  
+		'path' => $node->path['source'], // TODO: Verify/Test
                 'body' => fcc_es_get_body_fields( $node ),
                 'field_image' => fcc_es_get_image_fields( $node ), // TODO: Verify/Test
                 'funeral_home' => null, // TODO: Fix
@@ -251,7 +240,7 @@ function _fcc_elasticsearch_indexer_prepare_legals( $node ) {
 		'subdomains' => $node->subdomains,
 		'domain_site' => $node->domain_site,
 		'url' => fcc_es_get_url( $node ),
-		'path' => $node->path['source'], // TODO: Verify/Test  
+		'path' => $node->path['source'], // TODO: Verify/Test
                 'body' => fcc_es_get_body_fields( $node ),
 	);
 
@@ -296,7 +285,7 @@ function _fcc_elasticsearch_indexer_prepare_celebrations( $node ) {
 		'subdomains' => $node->subdomains,
 		'domain_site' => $node->domain_site,
 		'url' => fcc_es_get_url( $node ),
-		'path' => $node->path['source'], // TODO: Verify/Test  
+		'path' => $node->path['source'], // TODO: Verify/Test
                 'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ), // TODO: Fix
                 'body' => fcc_es_get_body_fields( $node ),
                 'field_image' => fcc_es_get_image_fields( $node ), // TODO: Verify/Test*/
@@ -310,5 +299,3 @@ function _fcc_elasticsearch_indexer_prepare_celebrations( $node ) {
 	//print_r( $fields ); // For Debugging. TODO: remove before production
 	return $fields;
 }
-
-
