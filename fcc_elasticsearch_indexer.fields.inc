@@ -168,10 +168,11 @@ function fcc_es_get_image_fields( $node ) {
 		//$image_field['caption'] = htmlentities( $image_field['alt'], ENT_QUOTES, 'UTF-8' ); // Doubles with 'alt'
 		$image_field['url'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
 		$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
-		$image_field['featured_860'] = fcc_es_get_image_url( image_style_url( 'featured_860', $image_field['uri'] ) );
-		$image_field['featured_620'] = fcc_es_get_image_url( image_style_url( 'featured_620', $image_field['uri'] ) );
-		$image_field['featured_430'] = fcc_es_get_image_url( image_style_url( 'featured_430', $image_field['uri'] ) );
-		$image_field['featured_315'] = fcc_es_get_image_url( image_style_url( 'featured_315', $image_field['uri'] ) );
+		$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $image_field['uri'] ) );
+		$image_field['16x9_620'] = fcc_es_get_image_url( image_style_url( '16x9_620', $image_field['uri'] ) );
+		$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $image_field['uri'] ) );
+		$image_field['16x9_315'] = fcc_es_get_image_url( image_style_url( '16x9_315', $image_field['uri'] ) );
+		$image_field['vert_700'] = fcc_es_get_image_url( image_style_url( 'vert_700', $image_field['uri'] ) );
 		$image_field['square_300'] = fcc_es_get_image_url( image_style_url( 'square_300', $image_field['uri'] ) );
 		$image_field['square_150'] = fcc_es_get_image_url( image_style_url( 'square_150', $image_field['uri'] ) );
 		$image_field['thumbnail'] = fcc_es_get_image_url( image_style_url( 'thumbnail', $image_field['uri'] ) ); // (100x100)
