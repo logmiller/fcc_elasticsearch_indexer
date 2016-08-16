@@ -171,7 +171,7 @@ function fcc_es_get_featured_image( $node ) {
 function fcc_es_get_search_thumbnail( $node ) {
 	$image_field = $node->field_image[ LANGUAGE_NONE ][0];
 	if ( ! empty( $image_field ) ) {
-		$image_field = fcc_es_get_image_url( image_style_url( 'square_200', $image_field['uri'] ) );
+		$image_field = fcc_es_get_image_url( image_style_url( 'square_300', $image_field['uri'] ) );
 	}
 	return $image_field;
 }
