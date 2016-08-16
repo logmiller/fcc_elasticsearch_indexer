@@ -439,6 +439,7 @@ function _fcc_es_process_node_entities($node_type, $offset, $batch_size) {
         ->entityCondition('entity_type', 'node')
         ->entityCondition('bundle', $node_type)
         ->propertyOrderBy('created', 'DESC')
+        ->propertyCondition('status', NODE_PUBLISHED)
         ->range($offset, $batch_size)
         ->execute();
 
