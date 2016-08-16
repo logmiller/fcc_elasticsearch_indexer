@@ -84,9 +84,9 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'status' => $node->status,
 		'promote' => $node->promote,
 		'sticky' => $node->sticky,
-		'path' => $node->path['source'],
 		'newspaper' => fcc_es_get_data_field_value( 'field_newspaper', $node ),
-		//'parent_domain' => null,
+		'parent_domain' => fcc_es_get_parent_domain( $node ),
+		'path' => $node->path['source'],
 		'domains' => fcc_es_get_domains_field( $node ),
 		'subdomains' => $node->subdomains,
 		'domain_site' => $node->domain_site,
@@ -95,8 +95,8 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'poll' => fcc_es_get_poll_fields( $node ), // TODO: Verify/Test
 		'google_drive_document_id' => fcc_es_get_data_field_value( 'field_google_drive_document_id', $node ),
 		'body' => fcc_es_get_body_fields( $node ),
-		'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ), // TODO: Fix
-		'tags' => fcc_es_get_taxonomy_terms( 'field_tags', $node ), // TODO: Fix
+		'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ),
+		'tags' => fcc_es_get_taxonomy_terms( 'field_tags', $node ),
 		//'featured_image' => fcc_es_get_featured_image( $node ),
 		'images' => fcc_es_get_image_fields( $node ),
 	);

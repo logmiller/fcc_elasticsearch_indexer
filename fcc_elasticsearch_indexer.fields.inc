@@ -64,25 +64,31 @@ function fcc_es_get_published_date( $node ) {
 }
 
 /**
- * Retrieve the published date field.
+ * Helper function to sanitize and build domain specific urls.
  *
  * @param $node entity
- * @return array
+ * @return string
  */
 function fcc_es_get_url( $node ) {
 
-	// Add the article 'URL' link
-	// NOTE leave protocol off for now
 	if ( ! empty( $node->field_override_url ) ) {
 		$url = $node->field_override_url[ $node->language ][0]['value']; // URL Override // TODO test
 	} else {
-		//$url = url( 'node/' . $node->nid ); // No URL Override
-		//$url = $_SERVER['HTTP_HOST'] . $url;
-		$newspaper = fcc_es_get_data_field_value( 'field_newspaper', $node );
-		$subdomain = fcc_es_newspaper_to_subdomain( $newspaper );
-		$url = $subdomain . '/node/' . $node->nid; // No URL Override
+		$url = fcc_es_get_parent_domain( $node ) . '/node/' . $node->nid; // No URL Override
 	}
 	return $url;
+}
+
+/**
+ * Returns parent domain from newspaper name
+ *
+ * @param $node entity
+ * @return string
+ */
+function fcc_es_get_parent_domain( $node ) {
+	$newspaper = fcc_es_get_data_field_value( 'field_newspaper', $node );
+	$subdomain = fcc_es_newspaper_to_subdomain( $newspaper );
+	return $subdomain;
 }
 
 /**
@@ -231,7 +237,8 @@ function fcc_es_get_taxonomy_terms($field, $entity) {
        foreach ($entity_field as $tid) {
            $term = taxonomy_term_load($tid['tid']);
            if (!empty($term->tid)) {
-               $terms[$term->vocabulary_machine_name][] = array(
+               //$terms[$term->vocabulary_machine_name][] = array(
+               $terms[] = array(
                  'tid' => $term->tid,
                  'name' => $term->name,
                );
@@ -239,7 +246,7 @@ function fcc_es_get_taxonomy_terms($field, $entity) {
        }
        unset($entity_field);
    }
-   return $terms['tags'];
+	 return $terms;
 }
 
 /**
