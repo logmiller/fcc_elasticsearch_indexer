@@ -98,32 +98,13 @@ function fcc_es_get_parent_domain( $node ) {
  * @return array
  */
 function fcc_es_get_author_fields( $node ) {
-	$nid = $node->nid;
 	$uid = $node->uid;
 	$author = array();
 	if ( $uid >= 1 ) {
 		$user = user_load( $uid );
-		// Author name
-		//$author['uid'] = $uid; // NOTE: probably don't need (duplicate)
-		//$author['name'] = $user->name; // NOTE: probably don't need (duplicate)
-		$author['realname'] = fcc_es_get_author_name( $user, $nid );
-		$author['first_name'] = ( ! empty( $user->first_name ) ) ? $user->field_first_name[ LANGUAGE_NONE ][0]['value'] : '';
-		$author['last_name'] = ( ! empty( $user->last_name ) ) ? $user->field_last_name[ LANGUAGE_NONE ][0]['value'] : '';
-		//$author['url'] = url( drupal_get_path_alias( 'user/$uid' ) ); // NOTE: probably don't need (index in USER type)
-		/*if ( ! empty( $user->picture ) ) { // NOTE: probably don't need (index in USER type)
-			$author['picture'] = array(
-				'uri' => $user->picture->uri,
-				'width' => $user->picture->image_dimensions['width'],
-				'height' => $user->picture->image_dimensions['height'],
-			);
-		}*/
-		// NOTE: probably don't need any of the below (index in USER type)
-		//$author['byline'] = "By <a href='{$author['url']}'>{$author['name']}</a>";
-		//$author['bio'] = ( ! empty( $user->field_bio ) ) ? $user->field_bio[ LANGUAGE_NONE ][0]['value'] : '';
-		//$author['email'] = ( ! empty( $user->mail ) ) ? $user->mail : '';
-		//$author['phone'] = ( ! empty( $user->field_phone_number ) ) ? $user->field_phone_number[ LANGUAGE_NONE ][0]['value'] : '';
-		//$author['twitter'] = ( ! empty( $user->twitter ) ) ? $user->field_twitter[ LANGUAGE_NONE ][0]['value'] : '';
-		//$author['google'] = ( ! empty( $user->field_google_plus ) ) ? $user->field_google_plus[ LANGUAGE_NONE ][0]['value'] : '';
+		$author['realname'] = fcc_es_get_author_name( $user, $node );
+		$author['first_name'] = $user->field_first_name[ LANGUAGE_NONE ][0]['value'];
+		$author['last_name'] = $user->field_last_name[ LANGUAGE_NONE ][0]['value'];
 	}
 	return $author;
 }

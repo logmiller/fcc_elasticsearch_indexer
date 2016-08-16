@@ -63,7 +63,6 @@ function fcc_es_is_supported_node_type( $node_type ) {
  * @return array
  */
 function _fcc_elasticsearch_indexer_prepare_article( $node ) {
-	// TODO: Move to "Types"? Remove $params?
 
 	$fields = array(
 		'nid' => $node->nid,
@@ -97,16 +96,9 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'body' => fcc_es_get_body_fields( $node ),
 		'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ),
 		'tags' => fcc_es_get_taxonomy_terms( 'field_tags', $node ),
-		//'featured_image' => fcc_es_get_featured_image( $node ),
 		'images' => fcc_es_get_image_fields( $node ),
 	);
 
-	// single post only (if not bulk)
-	/*foreach ( $fields as $key => $value ) {
-		$params['body'][ $key ] = $value;
-	}*/
-
-	//print_r( $fields ); // For Debugging. TODO: remove before production
 	return $fields;
 }
 
