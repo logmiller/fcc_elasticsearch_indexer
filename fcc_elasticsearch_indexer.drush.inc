@@ -19,12 +19,14 @@ function fcc_elasticsearch_indexer_drush_command() {
         'drush elastic-search-index' => dt('Index items for all of the elastic search indexes.'),
         'drush es-i' => dt('Alias to index items for all of the elastic search indexes.'),
         'drush es-i article 100' => dt("Index a maximum number of !limit items (index's cron batch size items per batch run) by the node type !type.", array('!limit' => 100, '!type' => 'article')),
-        'drush es-i article 100 10' => dt("Index a maximum number of !limit items (!batch_size items per batch run) by the node type !type.", array('!limit' => 100, '!batch_size' => 10, '!type' => 'article')),
-        'drush es-i article 0 100' => dt("Index all items of all indexes with !batch_size items per batch run.", array('!batch_size' => 100)),
+        'drush es-i article 100 10' => dt("Index a maximum number of !limit items by offset !offset by the node type !type.", array('!limit' => 100, '!offset' => 10, '!type' => 'article')),
+        'drush es-i article 0 100' => dt("Index all items with offset !offset.", array('!offset' => 10)),
+        'drush es-i article 0 10 100' => dt("Index all items from offset !offset with !batch_size items per batch run.", array('!offset'=>'10','!batch_size' => 100)),
       ),
       'arguments' => array(
         'node_type' => dt("The node type being inserted."),
         'limit' => dt("The number of items to index (index's cron batch size items per run). Set to 0 to index all items. Defaults to 0 (index all)."),
+        'offset' => dt("The number to items to skip. Defaults to 0 (index from beginning)."),
         'batch_size' => dt("The number of items to index per batch run. Set to 0 to index all items at once. Defaults to the index's cron batch size."),
       ),
       'aliases' => array('es-i'),
@@ -43,7 +45,7 @@ function fcc_elasticsearch_indexer_drush_command() {
  * @param integer $batch_size
  *   Number of items to index per batch.
  */
-function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL, $limit = NULL, $batch_size = 5) {
+function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL, $limit = NULL, $offset = 0, $batch_size = 5) {
     if (elasticsearch_index_drush_static(__FUNCTION__)) {
         return;
     }
@@ -63,7 +65,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
         if (empty($client)) {
             return;
         }
-        _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $batch_size);
+        _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $offset, $batch_size);
     }
     else {
         drupal_set_message(t('There was a problem saving this node to Elastic - the node type used is not supported.'));
@@ -72,7 +74,6 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
             return;
         }
     }
-    unset($supported_node_types); // unset supported node types
 }
 
 /**
@@ -91,17 +92,13 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
  * @return bool
  *   TRUE if batch was created, FALSE otherwise.
  */
-function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $batch_size) {
-    // Set the index name
-    $index = ES_NODE_ID;
-
+function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $offset, $batch_size) {
     // Get the number of remaining items to index.
     try {
         // ELASTICSEARCH BULK INDEX
         $total = ceil(( $limit / $batch_size)); // Set total batches for the progress bar
         $bar = drush_create_progress();
         //Create index and mapping
-        $offset = 0;
         for ($count = 0; $count <= $limit; $count++) {
             if ($count % $batch_size == 0) { // Every n documents stop and send the bulk request
                 //TODO: dynamic switch bulk indexer between node_type
@@ -114,7 +111,7 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
                     _fcc_elasticsearch_set_error_log($responses);
                 }
 
-                $offset = $count;
+                $offset += $count;
                 unset($document);  // erase the old bulk request
                 unset($responses); // unset  to save memory
                 $bar->setProgress($total, $count);
