@@ -64,6 +64,29 @@ function fcc_es_get_published_date( $node ) {
 }
 
 /**
+	 * Prepare date terms to send to ES.
+	 *
+	 * @param string $timestamp
+	 *
+	 * @return array
+	 */
+function fcc_es_get_date_terms( $timestamp ) {
+	$date_terms = array(
+		'year' => (int) date( 'Y', $timestamp ),
+		'month' => (int) date( 'm', $timestamp ),
+		'week' => (int) date( 'W', $timestamp ),
+		'dayofyear' => (int) date( 'z', $timestamp ),
+		'day' => (int) date( 'd', $timestamp ),
+		'dayofweek' => (int) date( 'w', $timestamp ),
+		'dayofweek_iso' => (int) date( 'N', $timestamp ),
+		'hour' => (int) date( 'H', $timestamp ),
+		'minute' => (int) date( 'i', $timestamp ),
+		'second' => (int) date( 's', $timestamp ),
+		'm' => (int) (date( 'Y', $timestamp ) . date( 'm', $timestamp ) ), // yearmonth
+	);
+	return $date_terms;
+}
+/**
  * Helper function to sanitize and build domain specific urls.
  *
  * @param $node entity
