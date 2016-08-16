@@ -168,9 +168,24 @@ function fcc_es_get_featured_image( $node ) {
 		$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
 		$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $image_field['uri'] ) );
 		$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $image_field['uri'] ) );
-		$image_field['square_300'] = fcc_es_get_image_url( image_style_url( 'square_300', $image_field['uri'] ) );
+		$image_field['square_200'] = fcc_es_get_image_url( image_style_url( 'square_200', $image_field['uri'] ) );
 	}
 	unset( $image_field['rdf_mapping'] );
+	return $image_field;
+}
+
+/**
+ * Retrieve the search thumbnail image.
+ *
+ * drush php-eval 'print_r( fcc_es_get_featured_image( node_load(11) ) );'
+ * @param $node entity
+ * @return array
+ */
+function fcc_es_get_search_thumbnail( $node ) {
+	$image_field = $node->field_image[ LANGUAGE_NONE ][0];
+	if ( ! empty( $image_field ) ) {
+		$image_field = fcc_es_get_image_url( image_style_url( 'square_200', $image_field['uri'] ) );
+	}
 	return $image_field;
 }
 
@@ -190,6 +205,9 @@ function fcc_es_get_image_fields( $node ) {
 			unset( $image_field['rdf_mapping'] );
 			$image_field['full'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
 			$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
+			$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $image_field['uri'] ) );
+			$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $image_field['uri'] ) );
+			$image_field['square_200'] = fcc_es_get_image_url( image_style_url( 'square_200', $image_field['uri'] ) );
 			$images_array[] = $image_field;
 		}
 	}

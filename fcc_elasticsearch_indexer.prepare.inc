@@ -70,9 +70,11 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'type' => $node->type,
 		'post_date' => date( 'Y-m-d H:i:s', $node->created ),
 		'title' => $node->title,
-		'name' => $node->name,
-		'uid' => $node->uid,
 		'author' => fcc_es_get_author_fields( $node ),
+		'url' => fcc_es_get_url( $node ),
+		'search_thumb' => fcc_es_get_search_thumbnail( $node ),
+		'uid' => $node->uid,
+		'name' => $node->name,
 		'picture' => $node->picture,
 		'created' => $node->created,
 		'published' => fcc_es_get_published_date( $node ),
@@ -82,13 +84,12 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'status' => $node->status,
 		'promote' => $node->promote,
 		'sticky' => $node->sticky,
+		'path' => $node->path['source'],
 		'newspaper' => fcc_es_get_data_field_value( 'field_newspaper', $node ),
-		'parent_domain' => null, // TODO
+		//'parent_domain' => null,
 		'domains' => fcc_es_get_domains_field( $node ),
 		'subdomains' => $node->subdomains,
 		'domain_site' => $node->domain_site,
-		'url' => fcc_es_get_url( $node ),
-		'path' => $node->path['source'], // TODO: Verify/Test
 		'video' => fcc_es_get_file_fields( 'field_video', $node ), // TODO: Verify/Test
 		'audio' => fcc_es_get_file_fields( 'field_audio', $node ), // TODO: Verify/Test
 		'poll' => fcc_es_get_poll_fields( $node ), // TODO: Verify/Test
@@ -96,7 +97,7 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'body' => fcc_es_get_body_fields( $node ),
 		'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ), // TODO: Fix
 		'tags' => fcc_es_get_taxonomy_terms( 'field_tags', $node ), // TODO: Fix
-		'featured_image' => fcc_es_get_featured_image( $node ),
+		//'featured_image' => fcc_es_get_featured_image( $node ),
 		'images' => fcc_es_get_image_fields( $node ),
 	);
 
