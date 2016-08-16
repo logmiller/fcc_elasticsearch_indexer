@@ -143,36 +143,41 @@ function fcc_es_get_author_name( $author, $node ) {
 	return $author_name;
 }
 
+function fcc_es_get_image_url( $uri ) {
+	$url = preg_replace( '(https?:\/\/)', '', $uri );
+	$url = preg_replace( '(^default)', '', $url );
+	$url = preg_replace( '(\?q=)', '', $url );
+	$url = preg_replace( '(\itok=.+)', '', $url ); // token removal
+	$url = preg_replace( '(\?$)', '', $url ); // token removal
+	$url = preg_replace( '(\&$)', '', $url ); // token removal
+	$url = 'www.fccnn.com' . $url; // TODO: find better or less static method?
+	return $url;
+}
+
 /**
  * Retrieve the images fields.
  *
+ * drush php-eval 'print_r( fcc_es_get_image_fields( node_load(11) ) );'
  * @param $node entity
  * @return array
  */
 // TODO: Finish
 function fcc_es_get_image_fields( $node ) {
-	$image_field = $node->field_image[ LANGUAGE_NONE ];
+	$image_field = $node->field_image[ LANGUAGE_NONE ][0];
 	if ( ! empty( $image_field ) ) {
-		$images = array_map(function( $img ) {
-			$img_alt = $img['alt'];
-			$img_description = $img['description'];
-			$img = file_load( $img['fid'] );
-			$img->url = ( ! empty( $image_field[0]['uri'] ) ) ? file_create_url( $img_uri[0]['uri'] ) : file_create_url( $img->uri );
-			$img->full_1000 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( 'full_1000', $image_field[0]['uri'] ) : file_create_url( $img->uri );
-			$img->featured_860 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_860', $image_field[0]['uri'] ) : file_create_url( $img->uri );
-			$img->featured_620 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_620', $image_field[0]['uri'] ) : file_create_url( $img->uri );
-			$img->featured_430 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_430', $image_field[0]['uri'] ) : file_create_url( $img->uri );
-			$img->featured_315 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( '16x9_315', $image_field[0]['uri'] ) : file_create_url( $img->uri );
-			$img->square_300 = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( 'square_300', $image_field[0]['uri'] ) : file_create_url( $img->uri );
-			$img->medium = ( ! empty( $image_field[0]['uri'] ) ) ? image_style_url( 'medium', $image_field[0]['uri'] ) : file_create_url( $img->uri );
-			$img->image_caption = htmlentities( $img_alt, ENT_QUOTES, 'UTF-8' );
-			$img->image_description = $img_description;
-			return $img;
-		}, $image_field );
+		//$image_field['caption'] = htmlentities( $image_field['alt'], ENT_QUOTES, 'UTF-8' ); // Doubles with 'alt'
+		$image_field['url'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
+		$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
+		$image_field['featured_860'] = fcc_es_get_image_url( image_style_url( 'featured_860', $image_field['uri'] ) );
+		$image_field['featured_620'] = fcc_es_get_image_url( image_style_url( 'featured_620', $image_field['uri'] ) );
+		$image_field['featured_430'] = fcc_es_get_image_url( image_style_url( 'featured_430', $image_field['uri'] ) );
+		$image_field['featured_315'] = fcc_es_get_image_url( image_style_url( 'featured_315', $image_field['uri'] ) );
+		$image_field['square_300'] = fcc_es_get_image_url( image_style_url( 'square_300', $image_field['uri'] ) );
+		$image_field['square_150'] = fcc_es_get_image_url( image_style_url( 'square_150', $image_field['uri'] ) );
+		$image_field['thumbnail'] = fcc_es_get_image_url( image_style_url( 'thumbnail', $image_field['uri'] ) ); // (100x100)
 	}
-	$images = (array) $images['0'];
-	unset( $images['rdf_mapping'] );
-	return $images;
+	unset( $image_field['rdf_mapping'] );
+	return $image_field;
 }
 
 /**
