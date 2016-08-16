@@ -93,6 +93,7 @@ function fcc_elasticsearch_indexer_node_insert( $node ) {
 	$result = $client->index( $params );
 	if ( $result && $result['created'] === false ) {
 		drupal_set_message( t( 'There was a problem saving this node to Elastic.' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, $result );
 		return;
 	}
 
@@ -113,6 +114,7 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 
 	if ( ! fcc_es_index_exists( ES_INDEX, $client ) ) {
 		drupal_set_message( t( 'There was a problem updating this node in Elastic. (Index does not exist)' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, 'Index does not exist' );
 		return;
 	}
 
@@ -120,21 +122,23 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 
 	if ( ! $params ) {
 		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, 'Parameters Error' );
 		return;
 	}
 
 	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
 	if ( $result && $result['hits']['total'] !== 1 ) {
 		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, 'Matching document not found for update.' );
 		return;
 	}
 
 	$params['id'] = $result['hits']['hits'][0]['_id'];
 	$version = $result['hits']['hits'][0]['_version'];
 	$index = $client->index( $params );
-
 	if ( $index['_version'] !== $version + 1 ) {
 		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, 'Incremented version not returned' );
 		return;
 	}
 
@@ -151,6 +155,7 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 
 	if ( ! fcc_es_index_exists( ES_INDEX, $client ) ) {
 		drupal_set_message( t( 'There was a problem deleting this node in Elastic. (Index does not exist)' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, 'Index does not exist' );
 		return;
 	}
 
@@ -158,6 +163,7 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
 	if ( $result && $result['hits']['total'] !== 1 ) {
 		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, 'Matching document not found for deletion.' );
 		return;
 	}
 
@@ -168,8 +174,9 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 	);
 
 	$result = $client->delete( $params );
-	if ( true !== $result && $result['found'] ) {
+	if ( ! $result && $result['found'] ) {
 		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
+		_fcc_elasticsearch_set_single_error_log( $node, 'There was a problem deleting this node in Elastic.' );
 		return;
 	}
 
@@ -209,4 +216,19 @@ function _fcc_elasticsearch_set_error_log($responses) {
             ))
             ->execute();
     }
+}
+
+/**
+ * Push errors to 'elasticsearch_reindex' table (single node/non-bulk).
+ * @param type $responses
+ */
+function _fcc_elasticsearch_set_single_error_log( $node, $result ) {
+	db_merge( 'elasticsearch_logs' )
+			->key( array( 'nid' => $node->nid ) )
+      ->fields( array(
+				'type' => $node->type,
+				'log_time' => REQUEST_TIME,
+				'message' => json_encode( $result ),
+      ))
+      ->execute();
 }

@@ -77,7 +77,7 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'picture' => $node->picture,
 		'created' => $node->created,
 		'published' => fcc_es_get_published_date( $node ),
-		'date_terms' => fcc_es_get_date_terms( (string) $node->created ),
+		'date_terms' => fcc_es_get_date_terms( $node->created ),
 		'revision_timestamp' => $node->revision_timestamp,
 		'revision_uid' => $node->revision_uid,
 		'vid' => $node->vid,
