@@ -155,31 +155,47 @@ function fcc_es_get_image_url( $uri ) {
 }
 
 /**
+ * Retrieve the featured image.
+ *
+ * drush php-eval 'print_r( fcc_es_get_featured_image( node_load(11) ) );'
+ * @param $node entity
+ * @return array
+ */
+function fcc_es_get_featured_image( $node ) {
+	$image_field = $node->field_image[ LANGUAGE_NONE ][0];
+	if ( ! empty( $image_field ) ) {
+		$image_field['full'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
+		$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
+		$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $image_field['uri'] ) );
+		$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $image_field['uri'] ) );
+		$image_field['square_300'] = fcc_es_get_image_url( image_style_url( 'square_300', $image_field['uri'] ) );
+	}
+	unset( $image_field['rdf_mapping'] );
+	return $image_field;
+}
+
+/**
  * Retrieve the images fields.
  *
  * drush php-eval 'print_r( fcc_es_get_image_fields( node_load(11) ) );'
  * @param $node entity
  * @return array
  */
-// TODO: Finish
 function fcc_es_get_image_fields( $node ) {
-	$image_field = $node->field_image[ LANGUAGE_NONE ][0];
-	if ( ! empty( $image_field ) ) {
-		//$image_field['caption'] = htmlentities( $image_field['alt'], ENT_QUOTES, 'UTF-8' ); // Doubles with 'alt'
-		$image_field['url'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
-		$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
-		$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $image_field['uri'] ) );
-		$image_field['16x9_620'] = fcc_es_get_image_url( image_style_url( '16x9_620', $image_field['uri'] ) );
-		$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $image_field['uri'] ) );
-		$image_field['16x9_315'] = fcc_es_get_image_url( image_style_url( '16x9_315', $image_field['uri'] ) );
-		$image_field['vert_700'] = fcc_es_get_image_url( image_style_url( 'vert_700', $image_field['uri'] ) );
-		$image_field['square_300'] = fcc_es_get_image_url( image_style_url( 'square_300', $image_field['uri'] ) );
-		$image_field['square_150'] = fcc_es_get_image_url( image_style_url( 'square_150', $image_field['uri'] ) );
-		$image_field['thumbnail'] = fcc_es_get_image_url( image_style_url( 'thumbnail', $image_field['uri'] ) ); // (100x100)
+	$field_image = $node->field_image[ LANGUAGE_NONE ];
+	$images_array = array();
+	if ( ! empty( $field_image ) ) {
+		foreach ( $field_image as $image ) {
+			$image_field = $image;
+			unset( $image_field['rdf_mapping'] );
+			$image_field['full'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
+			$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
+			$images_array[] = $image_field;
+		}
 	}
-	unset( $image_field['rdf_mapping'] );
-	return $image_field;
+	return $images_array;
 }
+
 
 /**
  * Fetch all taxonomy terms from an entity.
@@ -220,27 +236,31 @@ function fcc_es_get_taxonomy_terms($field, $entity) {
 function fcc_es_get_file_fields( $field, $entity ) {
    $videos = array();
    $entity_field = $entity->{$field}[LANGUAGE_NONE];
-   if (is_array($entity_field) || $entity_field instanceof Traversable) {
-       $fids = array_column($entity->{$field}[LANGUAGE_NONE], 'fid');
-       $files = file_load_multiple($fids);
-       unset($fids); // unset file ids
-       foreach ($files as $file) {
-           $media = fcc_es_get_media_stream_paths($file);
-           $video = array(
-             'type' => $file->type,
-             'fid' => $file->fid,
-             'uid' => $file->uid,
-             'filename' => $file->filename,
-             'uri' => $file->uri,
-             'filemime' => $file->filemime,
-           );
+	 if ( ! $entity_field ) {
+	 	return null;
+	 } else {
+		 if (is_array($entity_field) || $entity_field instanceof Traversable) {
+	       $fids = array_column($entity->{$field}[LANGUAGE_NONE], 'fid');
+	       $files = file_load_multiple($fids);
+	       unset($fids); // unset file ids
+	       foreach ($files as $file) {
+	           $media = fcc_es_get_media_stream_paths($file);
+	           $video = array(
+	             'type' => $file->type,
+	             'fid' => $file->fid,
+	             'uid' => $file->uid,
+	             'filename' => $file->filename,
+	             'uri' => $file->uri,
+	             'filemime' => $file->filemime,
+	           );
 
-           $videos[] = array_merge($video, $media);
-           unset($media); // unset media
-       }
-       unset($file); // unset file
-   }
-   return $videos;
+	           $videos[] = array_merge($video, $media);
+	           unset($media); // unset media
+	       }
+	       unset($file); // unset file
+	   }
+	   return $videos;
+	 }
 }
 
 /**
@@ -286,7 +306,7 @@ function fcc_es_get_poll_fields( $entity ) {
            $value = array_shift(array_column($entity_field, 'value'));
        }
        else {
-           return $poll;
+           return null;
        }
        if ($field == 'field_poll_id') {
            $poll = array(
