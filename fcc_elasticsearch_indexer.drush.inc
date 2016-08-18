@@ -107,7 +107,7 @@ function _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset
                     _fcc_elasticsearch_set_error_log($responses);
                 }
 
-                $offset += $count;
+                $offset += $batch_size;
                 unset($document);  // erase the old bulk request
                 unset($responses); // unset  to save memory
                 $bar->setProgress($total, $count);
