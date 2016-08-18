@@ -92,7 +92,6 @@ function _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset
     // Get the number of remaining items to index.
     try {
         // ELASTICSEARCH BULK INDEX
-        $total = ceil(( $limit / $batch_size)); // Set total batches for the progress bar
         $bar = drush_create_progress();
         //Create index and mapping
         for ($count = 0; $count <= $limit; $count++) {
@@ -110,7 +109,8 @@ function _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset
                 $offset += $batch_size;
                 unset($document);  // erase the old bulk request
                 unset($responses); // unset  to save memory
-                $bar->setProgress($total, $count);
+                //print 'count:' . $count . "\n";
+                $bar->setProgress($limit, $count);
             }
         }
         $bar->end();
