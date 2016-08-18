@@ -132,7 +132,7 @@ function fcc_es_get_author_fields($node) {
     $author = NULL;
     if ($node->uid >= 1) {
         //$user = user_load($node->uid);
-        $user = _fcc_es_entity_load('user', array($node->uid));
+        $user = reset(_fcc_es_entity_load('user', array($node->uid)));
         //reset($user);
         $author['realname'] = fcc_es_get_author_name($user, $node);
         $author['first_name'] = $user->field_first_name[LANGUAGE_NONE][0]['value'];
@@ -261,7 +261,7 @@ function fcc_es_get_taxonomy_terms($field, $entity) {
     $entity_field = $entity->{$field}[LANGUAGE_NONE];
     if (is_array($entity_field) || $entity_field instanceof Traversable) {
         foreach ($entity_field as $tid) {
-            $term = _fcc_es_entity_load('taxonomy_term', array($tid['tid']));
+            $term = reset(_fcc_es_entity_load('taxonomy_term', array($tid['tid'])));
             //$term = taxonomy_term_load($tid['tid']);
             if (!empty($term->tid)) {
                 $terms[] = array(
