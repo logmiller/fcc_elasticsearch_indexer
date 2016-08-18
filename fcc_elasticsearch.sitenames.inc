@@ -232,5 +232,6 @@ function _es_get_sitename_domain_id( $site_name ) {
 			break;
 
 	}
+        unset($site_name); // unset site name
 	return $domain_id;
 }

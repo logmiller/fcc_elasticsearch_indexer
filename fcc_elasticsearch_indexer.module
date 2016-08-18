@@ -3,6 +3,7 @@
 /*------------------------------------------------------------------------------
 # Load Includes
 ------------------------------------------------------------------------------*/
+module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.common' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.types' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.prepare' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.fields' );

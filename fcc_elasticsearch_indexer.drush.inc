@@ -45,12 +45,12 @@ function fcc_elasticsearch_indexer_drush_command() {
  * @param integer $batch_size
  *   Number of items to index per batch.
  */
-function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL, $limit = NULL, $offset = 0, $batch_size = 5) {
+function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL, $limit = NULL, $offset = 0, $batch_size = 100) {
     if (elasticsearch_index_drush_static(__FUNCTION__)) {
         return;
     }
     // Check if node type is of supported node types
-    if ( fcc_es_is_supported_node_type( $node_type ) ) {
+    if (fcc_es_is_supported_node_type($node_type)) {
         // Get total count if limit isn't set
         if (empty($limit)) {
             $query = new \EntityFieldQuery();
@@ -59,13 +59,9 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
                     ->entityCondition('bundle', $node_type)
                     ->propertyCondition('status', NODE_PUBLISHED)
                     ->count()->execute();
+            unset($query); // Unset query
         }
-
-        $client = elasticsearch_connector_get_client_by_id(DEFAULT_CLUSTER_ID);
-        if (empty($client)) {
-            return;
-        }
-        _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $offset, $batch_size);
+        _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset, $batch_size);
     }
     else {
         drupal_set_message(t('There was a problem saving this node to Elastic - the node type used is not supported.'));
@@ -92,7 +88,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
  * @return bool
  *   TRUE if batch was created, FALSE otherwise.
  */
-function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $offset, $batch_size) {
+function _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset, $batch_size) {
     // Get the number of remaining items to index.
     try {
         // ELASTICSEARCH BULK INDEX
@@ -101,9 +97,9 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
         //Create index and mapping
         for ($count = 0; $count <= $limit; $count++) {
             if ($count % $batch_size == 0) { // Every n documents stop and send the bulk request
-                //TODO: dynamic switch bulk indexer between node_type
-                $document = _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size); // TODO update index name declaration?
-								$responses = fcc_es_post_bulk( $document ); // send the bulk index request
+                // Build elastic search query
+                $document = _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size);
+                $responses = fcc_es_post_bulk($document); // send the bulk index request
 
                 // indexing success/fail response from elasticsearch
                 if ($responses['errors'] > 0) {
@@ -113,7 +109,7 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
 
                 $offset += $count;
                 unset($document);  // erase the old bulk request
-                unset($responses); // unset to save memory
+                unset($responses); // unset  to save memory
                 $bar->setProgress($total, $count);
             }
         }

@@ -185,5 +185,6 @@ function _es_get_subdomain( $domain_id ) {
 			# All sites search
 			break;
 	}
+        unset($domain_id); // unset domain_id
 	return $subdomain;
 }
