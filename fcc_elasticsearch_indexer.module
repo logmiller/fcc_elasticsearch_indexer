@@ -1,21 +1,26 @@
 <?php
 
 /*------------------------------------------------------------------------------
-# Module Setup
-------------------------------------------------------------------------------*/
-
-# Declare Constants
-define( 'DEFAULT_CLUSTER_ID', elasticsearch_connector_get_default_connector() ); // Name of the target ElasticSearch cluser. (Set in the ES Connector Module)
-define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index. // TODO make selectable in admin?
-
 # Load Includes
+------------------------------------------------------------------------------*/
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.common' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.types' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.prepare' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.fields' );
+module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.api' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.sitenames' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.subdomains' );
 
+/*------------------------------------------------------------------------------
+# Module Setup
+------------------------------------------------------------------------------*/
+$cluster = elasticsearch_connector_cluster_load( elasticsearch_connector_get_default_connector() );
+
+# Declare Constants
+define( 'DEFAULT_CLUSTER_ID', $cluster->cluster_id ); // Name of the target ElasticSearch cluster.
+define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index. // TODO make a variable/get_variable
+define( 'ES_URL', $cluster->url );
+define( 'ES_PORT', fcc_es_get_port( $cluster->url ) );
 
 /*------------------------------------------------------------------------------
 # Node Functions
@@ -232,4 +237,14 @@ function _fcc_elasticsearch_set_single_error_log( $node, $result ) {
 				'message' => json_encode( $result ),
       ))
       ->execute();
+}
+
+/**
+ * Returns the ElasticSearch Server port from the url address
+ * @param string $url
+ * @return string $port
+ */
+function fcc_es_get_port( $url ) {
+	$port = preg_replace( '(.+:)', '', $url );
+	return $port;
 }
