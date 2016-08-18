@@ -45,12 +45,12 @@ function fcc_elasticsearch_indexer_drush_command() {
  * @param integer $batch_size
  *   Number of items to index per batch.
  */
-function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL, $limit = NULL, $offset = 0, $batch_size = 5) {
+function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL, $limit = NULL, $offset = 0, $batch_size = 100) {
     if (elasticsearch_index_drush_static(__FUNCTION__)) {
         return;
     }
     // Check if node type is of supported node types
-    if ( fcc_es_is_supported_node_type( $node_type ) ) {
+    if (fcc_es_is_supported_node_type($node_type)) {
         // Get total count if limit isn't set
         if (empty($limit)) {
             $query = new \EntityFieldQuery();
@@ -61,7 +61,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
                     ->count()->execute();
         }
 
-        $client = elasticsearch_connector_get_client_by_id(DEFAULT_CLUSTER_ID);
+        $client = elasticsearch_connector_get_client_by_id(DEFAULT_CLUSTER_ID); //44040192 bytes
         if (empty($client)) {
             return;
         }
@@ -101,8 +101,8 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
         //Create index and mapping
         for ($count = 0; $count <= $limit; $count++) {
             if ($count % $batch_size == 0) { // Every n documents stop and send the bulk request
-                //TODO: dynamic switch bulk indexer between node_type
-                $document = _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size); // TODO update index name declaration?
+                // Build elastic search query
+                $document = _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size);
                 $responses = $client->bulk($document);
 
                 // indexing success/fail response from elasticsearch
@@ -114,6 +114,7 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
                 $offset += $count;
                 unset($document);  // erase the old bulk request
                 unset($responses); // unset  to save memory
+                gc_collect_cycles(); //Force garbage collection
                 $bar->setProgress($total, $count);
             }
         }

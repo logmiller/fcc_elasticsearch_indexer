@@ -3,23 +3,28 @@
 /**
  * Converts node entity type to document.
  *
- * @param type $index
+ * @param type $node_type
  * @param type $offset
  * @param type $batch_size
  * @return array
  */
 function _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size) {
     // Load entities
-    $entities = _fcc_es_process_node_entities($node_type, $offset, $batch_size);
+    $ids = _fcc_es_process_node_ids($node_type, $offset, $batch_size);
+    //TODO: Find a better method that doesn't involve hacking entity_load
+    $entities = _fcc_es_entity_load('node', $ids);
 
     // Build document array
     // Notice: Command and Content arrays must be separated for bulk indexing to work.
-    $document = array();
-    foreach ($entities as $entity) {
-			$document['body'][] = [ 'index' => _fcc_elasticsearch_indexer_prepare_bulk_document_metadata( $entity ) ];
-                        $document['body'][] = call_user_func('_fcc_elasticsearch_indexer_prepare_' . $node_type, $entity); // Body Fields
+    $document = NULL;
+    foreach ($ids as $id) {
+        $meta = _fcc_elasticsearch_indexer_prepare_bulk_document_metadata($entities[$id]);
+        $document['body'][] = [ 'index' => $meta]; // Meta Fields
+        $document['body'][] = call_user_func('_fcc_elasticsearch_indexer_prepare_' . $node_type, $entities[$id]); // Body Fields
+        unset($meta);
     }
     unset($entities); // unset entities
+
     return $document;
 }
 
@@ -426,13 +431,13 @@ function _fcc_elasticsearch_indexer_node_legals_to_documents($index, $offset, $b
 }
 
 /**
- * Process the node entities.
- * @param type $node
+ * Process the node ids.
+ * @param type $node_type
  * @param type $offset
  * @param type $batch_size
  * @return type
  */
-function _fcc_es_process_node_entities($node_type, $offset, $batch_size) {
+function _fcc_es_process_node_ids($node_type, $offset, $batch_size) {
     $query = new \EntityFieldQuery();
 
     $result = $query
@@ -452,10 +457,8 @@ function _fcc_es_process_node_entities($node_type, $offset, $batch_size) {
     // Add the ids with the entity type to the $entities array
     $ids = array_keys($result['node']);
 
-    // Load entities
-    $entities = entity_load('node', $ids);
-    unset($ids); // unset ids
     unset($result); // close query
+    unset($query); // close query
 
-    return $entities;
+    return $ids;
 }

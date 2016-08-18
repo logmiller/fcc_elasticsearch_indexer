@@ -9,6 +9,7 @@ define( 'DEFAULT_CLUSTER_ID', elasticsearch_connector_get_default_connector() );
 define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index. // TODO make selectable in admin?
 
 # Load Includes
+module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.common' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.types' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.prepare' );
 module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch_indexer.fields' );
