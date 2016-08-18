@@ -7,6 +7,7 @@ files[] = fcc_elasticsearch.index.inc
 files[] = fcc_elasticsearch.types.inc
 files[] = fcc_elasticsearch_indexer.prepare.inc
 files[] = fcc_elasticsearch_indexer.fields.inc
+files[] = fcc_elasticsearch_indexer.api.inc
 files[] = fcc_elasticsearch.sitenames.inc
 files[] = fcc_elasticsearch.subdomains.inc
 files[] = progress.drush.inc
