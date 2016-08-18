@@ -100,6 +100,9 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'images' => fcc_es_get_image_fields( $node ),
 	);
 
+        // Unset parameters
+        unset($node);
+
 	return $fields;
 }
 

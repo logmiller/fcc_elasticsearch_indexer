@@ -59,13 +59,9 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
                     ->entityCondition('bundle', $node_type)
                     ->propertyCondition('status', NODE_PUBLISHED)
                     ->count()->execute();
+            unset($query); // Unset query
         }
-
-        $client = elasticsearch_connector_get_client_by_id(DEFAULT_CLUSTER_ID); //44040192 bytes
-        if (empty($client)) {
-            return;
-        }
-        _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $offset, $batch_size);
+        _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset, $batch_size);
     }
     else {
         drupal_set_message(t('There was a problem saving this node to Elastic - the node type used is not supported.'));
@@ -92,7 +88,7 @@ function drush_fcc_elasticsearch_indexer_elastic_search_index($node_type = NULL,
  * @return bool
  *   TRUE if batch was created, FALSE otherwise.
  */
-function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit, $offset, $batch_size) {
+function _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset, $batch_size) {
     // Get the number of remaining items to index.
     try {
         // ELASTICSEARCH BULK INDEX
@@ -103,7 +99,7 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
             if ($count % $batch_size == 0) { // Every n documents stop and send the bulk request
                 // Build elastic search query
                 $document = _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offset, $batch_size);
-		$responses = fcc_es_post_bulk( $document ); // send the bulk index request
+                $responses = fcc_es_post_bulk($document); // send the bulk index request
 
                 // indexing success/fail response from elasticsearch
                 if ($responses['errors'] > 0) {
@@ -114,7 +110,6 @@ function _drush_elastic_search_batch_indexing_create($client, $node_type, $limit
                 $offset += $count;
                 unset($document);  // erase the old bulk request
                 unset($responses); // unset  to save memory
-                gc_collect_cycles(); //Force garbage collection
                 $bar->setProgress($total, $count);
             }
         }
