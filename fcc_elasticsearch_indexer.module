@@ -16,10 +16,10 @@ module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.subd
 $cluster = elasticsearch_connector_cluster_load( elasticsearch_connector_get_default_connector() );
 
 # Declare Constants
-define( 'DEFAULT_CLUSTER_ID', $cluster->cluster_id ); // Name of the target ElasticSearch cluster.
-define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index. // TODO make a variable/get_variable
-define( 'ES_URL', $cluster->url );
-define( 'ES_PORT', fcc_es_get_port( $cluster->url ) );
+define( 'DEFAULT_CLUSTER_ID', $cluster->cluster_id ); // TODO remove once Connector module dependancy is deprecated
+define( 'ES_INDEX', fcc_es_get_cluster_index() );  // Name of the target ElasticSearch index.
+define( 'ES_URL', fcc_es_get_cluster_url() );
+define( 'ES_PORT', fcc_es_get_cluster_port() );
 
 /*------------------------------------------------------------------------------
 # Node Functions
@@ -96,7 +96,7 @@ function fcc_elasticsearch_indexer_node_insert( $node ) {
 	}
 
 	$result = $client->index( $params );
-	if ( $result && $result['created'] === false ) {
+	if ( false === $result && $result['created'] ) {
 		drupal_set_message( t( 'There was a problem saving this node to Elastic.' ) );
 		_fcc_elasticsearch_set_single_error_log( $node, $result );
 		return;
@@ -111,7 +111,7 @@ function fcc_elasticsearch_indexer_node_insert( $node ) {
  * @param object $node
  */
 function fcc_elasticsearch_indexer_node_update( $node ) {
-	if ( $node->is_new !== false ) {
+	if ( false !== $node->is_new ) {
 		return;
 	}
 
@@ -132,7 +132,7 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 	}
 
 	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
-	if ( $result && $result['hits']['total'] !== 1 ) {
+	if ( 1 !== $result && $result['hits']['total'] ) {
 		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
 		_fcc_elasticsearch_set_single_error_log( $node, 'Matching document not found for update.' );
 		return;
@@ -166,7 +166,7 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 
 	// If the node is in Elastic, remove it
 	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
-	if ( $result && $result['hits']['total'] !== 1 ) {
+	if ( 1 !== $result && $result['hits']['total'] ) {
 		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
 		_fcc_elasticsearch_set_single_error_log( $node, 'Matching document not found for deletion.' );
 		return;
@@ -210,17 +210,17 @@ function fcc_es_index_exists( $index, $client = null ) {
  * Push errors to 'elasticsearch_reindex' table.
  * @param type $responses
  */
-function _fcc_elasticsearch_set_error_log($responses) {
-    foreach ($responses['items'] AS $items) {
-        db_merge('elasticsearch_logs')
-            ->key(array('nid' => $items['index']['_id']))
-            ->fields(array(
-              'type' => $items['index']['_type'],
-              'log_time' => REQUEST_TIME,
-              'message' => json_encode($items['index']['error']),
-            ))
-            ->execute();
-    }
+function _fcc_elasticsearch_set_error_log( $responses ) {
+	foreach ( $responses['items'] as $items ) {
+		db_merge( 'elasticsearch_logs' )
+	      ->key( array( 'nid' => $items['index']['_id'] ) )
+	      ->fields(array(
+					'type' => $items['index']['_type'],
+					'log_time' => REQUEST_TIME,
+					'message' => json_encode( $items['index']['error'] ),
+					))
+					->execute();
+	}
 }
 
 /**
@@ -230,12 +230,46 @@ function _fcc_elasticsearch_set_error_log($responses) {
 function _fcc_elasticsearch_set_single_error_log( $node, $result ) {
 	db_merge( 'elasticsearch_logs' )
 			->key( array( 'nid' => $node->nid ) )
-      ->fields( array(
+			->fields( array(
 				'type' => $node->type,
 				'log_time' => REQUEST_TIME,
 				'message' => json_encode( $result ),
-      ))
-      ->execute();
+			))
+			->execute();
+}
+
+/*------------------------------------------------------------------------------
+# Cluster Variable Handling
+------------------------------------------------------------------------------*/
+
+/**
+ * Set the cluster url used for elasticsearch.
+ *
+ * @param string $url
+ * @return string
+ */
+function fcc_es_set_cluster_url( $url ) {
+	fcc_es_set_cluster_port( $url );
+	return variable_set( 'es_url', $url );
+}
+
+/**
+ * Get the cluster url used for elasticsearch.
+ *
+ * @return string
+ */
+function fcc_es_get_cluster_url() {
+	return variable_get( 'es_url', '' );
+}
+
+/**
+ * Sets the ElasticSearch Server port variable from the url address
+ * @param string $url
+ * @return string $port
+ */
+function fcc_es_set_cluster_port( $url ) {
+	$port = preg_replace( '(.+:)', '', $url );
+	return variable_set( 'es_port', $port );
 }
 
 /**
@@ -243,7 +277,30 @@ function _fcc_elasticsearch_set_single_error_log( $node, $result ) {
  * @param string $url
  * @return string $port
  */
-function fcc_es_get_port( $url ) {
-	$port = preg_replace( '(.+:)', '', $url );
-	return $port;
+function fcc_es_get_cluster_port() {
+	return variable_get( 'es_port', '' );
+}
+
+/**
+ * Set the cluster index name used for elasticsearch.
+ *
+ * @param string $index
+ * @return string
+ */
+function fcc_es_set_cluster_index( $index ) {
+	return variable_set( 'es_index', $index );
+}
+
+/**
+ * Get the cluster index name used for elasticsearch.
+ *
+ * @param string $index
+ * @return string
+ */
+function fcc_es_get_cluster_index() {
+	$index = variable_get( 'es_index', '' );
+	if ( ! $index ) {
+		$index = 'fccnn' // default
+	}
+	return $index;
 }
