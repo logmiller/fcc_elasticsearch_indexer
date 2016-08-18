@@ -300,7 +300,7 @@ function fcc_es_set_cluster_index( $index ) {
 function fcc_es_get_cluster_index() {
 	$index = variable_get( 'es_index', '' );
 	if ( ! $index ) {
-		$index = 'fccnn' // default
+		$index = 'fccnn'; // default
 	}
 	return $index;
 }
