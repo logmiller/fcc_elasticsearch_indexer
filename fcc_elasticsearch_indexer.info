@@ -1,6 +1,6 @@
 name = FCC Elasticsearch Indexer
 description = Elasticsearch Indexing module for Drupal 7.
-version = 0.16.08.04
+version = 0.16.08.19
 core = 7.x
 ; required
 files[] = fcc_elasticsearch.index.inc
@@ -11,5 +11,3 @@ files[] = fcc_elasticsearch_indexer.api.inc
 files[] = fcc_elasticsearch.sitenames.inc
 files[] = fcc_elasticsearch.subdomains.inc
 files[] = progress.drush.inc
-
-dependencies[] = elasticsearch_connector

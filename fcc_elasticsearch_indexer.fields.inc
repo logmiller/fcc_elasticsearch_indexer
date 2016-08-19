@@ -169,15 +169,16 @@ function fcc_es_get_author_name($author, $node) {
     return $author_name;
 }
 
-function fcc_es_get_image_url($uri) {
-    $url = preg_replace('(https?:\/\/)', '', $uri);
-    $url = preg_replace('(^default)', '', $url);
-    $url = preg_replace('(\?q=)', '', $url);
-    $url = preg_replace('(\itok=.+)', '', $url); // token removal
-    $url = preg_replace('(\?$)', '', $url); // token removal
-    $url = preg_replace('(\&$)', '', $url); // token removal
-    $url = 'www.fccnn.com' . $url; // TODO: find better or less static method?
-    return $url;
+function fcc_es_get_image_url( $uri ) {
+	$url = preg_replace('(.+(?=sites\/default\/files\/))', '', $uri);
+	//$url = preg_replace( '(https?:\/\/)', '', $uri );
+	//$url = preg_replace( '(^default)', '', $url );
+	//$url = preg_replace( '(\?q=)', '', $url );
+	$url = preg_replace( '(\itok=.+)', '', $url ); // token removal
+	$url = preg_replace( '(\?$)', '', $url ); // token removal
+	$url = preg_replace( '(\&$)', '', $url ); // token removal
+	$url = 'www.fccnn.com/' . $url; // TODO: find better or less static method?
+	return $url;
 }
 
 /**
@@ -187,19 +188,19 @@ function fcc_es_get_image_url($uri) {
  * @param $node entity
  * @return array
  */
-function fcc_es_get_featured_image($node) {
-    $image_field = $node->field_image[LANGUAGE_NONE][0];
-    if (!empty($image_field)) {
-        $image_field['full'] = fcc_es_get_image_url(file_create_url($image_field['uri']));
-        $image_field['full_1000'] = fcc_es_get_image_url(image_style_url('full_1000', $image_field['uri']));
-        $image_field['16x9_860'] = fcc_es_get_image_url(image_style_url('16x9_860', $image_field['uri']));
-        $image_field['16x9_430'] = fcc_es_get_image_url(image_style_url('16x9_430', $image_field['uri']));
-        $image_field['square_200'] = fcc_es_get_image_url(image_style_url('square_200', $image_field['uri']));
-    }
-    unset($node); // unset parameter
-    unset($image_field['rdf_mapping']);
+function fcc_es_get_featured_image( $node ) {
+	$image_field = $node->field_image[ LANGUAGE_NONE ][0];
+	if ( ! empty( $image_field ) ) {
+		$image_field['full'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
+		$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
+		$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $image_field['uri'] ) );
+		$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $image_field['uri'] ) );
+		$image_field['square_200'] = fcc_es_get_image_url( image_style_url( 'square_200', $image_field['uri'] ) );
+	}
+	unset( $node ); // unset parameter
+	unset( $image_field['rdf_mapping'] );
 
-    return $image_field;
+	return $image_field;
 }
 
 /**
@@ -233,7 +234,7 @@ function fcc_es_get_image_fields($node) {
         foreach ($field_image as $image) {
             $image_field = $image;
             unset($image_field['rdf_mapping']);
-            $image_field['full'] = fcc_es_get_image_url(file_create_url($image_field['uri']));
+            $image_field['full'] = fcc_es_get_image_url(file_create_url($image_field['uri'])); // TODO FIX www.fccnn.com/siteshttp://127.0.0.1/inforum/"
             $image_field['full_1000'] = fcc_es_get_image_url(image_style_url('full_1000', $image_field['uri']));
             $image_field['16x9_860'] = fcc_es_get_image_url(image_style_url('16x9_860', $image_field['uri']));
             $image_field['16x9_430'] = fcc_es_get_image_url(image_style_url('16x9_430', $image_field['uri']));

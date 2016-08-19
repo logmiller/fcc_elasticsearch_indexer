@@ -39,6 +39,87 @@ function fcc_es_post_bulk( $document ) {
 	return $response;
 }
 
+/**
+ * Handles single document indexing post requests using curl
+ *
+ * @param object $document
+ * @return string $response (json)
+ */
+function fcc_es_post_single( $document ) {
+
+	$url = ES_URL.'/'.$document['index'].'/'.$document['type'].'/'.$document['id'];
+	$port = ES_PORT;
+	$document = json_encode( $document['body'] );
+
+	$ch = curl_init();
+	curl_setopt( $ch, CURLOPT_URL, $url );
+	curl_setopt( $ch, CURLOPT_PORT, $port );
+	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+	curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'POST' );
+	curl_setopt( $ch, CURLOPT_POSTFIELDS, $document );
+	curl_setopt( $ch, CURLOPT_HTTPHEADER, array(
+		'Content-Type: application/json',
+		'Content-Length: ' . strlen( $document ),
+	));
+	$response = json_decode( curl_exec( $ch ), true );
+	curl_close( $ch );
+
+	unset( $document ); // unset to save memory*/
+
+	return $response;
+}
+
+
+/**
+ * Handles single document update post requests using curl
+ *
+ * @param object $document
+ * @return string $response (json)
+ */
+function fcc_es_delete_single( $document ) {
+
+	$url = ES_URL.'/'.$document['index'].'/'.$document['type'].'/'.$document['id'];
+	$port = ES_PORT;
+
+	$ch = curl_init();
+	curl_setopt( $ch, CURLOPT_URL, $url );
+	curl_setopt( $ch, CURLOPT_PORT, $port );
+	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+	curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'DELETE' );
+
+	$response = json_decode( curl_exec( $ch ), true );
+	curl_close( $ch );
+
+	unset( $document ); // unset to save memory*/
+
+	return $response;
+}
+
+/**
+ * Handles single document query requests using curl
+ *
+ * @param object $document
+ * @return string $response (json)
+ */
+function fcc_es_query_single( $document ) {
+
+	$url = ES_URL.'/'.$document['index'].'/'.$document['type'].'/'.$document['id'];
+	$port = ES_PORT;
+
+	$ch = curl_init();
+	curl_setopt( $ch, CURLOPT_URL, $url );
+	curl_setopt( $ch, CURLOPT_PORT, $port );
+	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+	curl_setopt( $ch, CURLOPT_CUSTOMREQUEST, 'GET' );
+
+	$response = json_decode( curl_exec( $ch ), true );
+	curl_close( $ch );
+
+	unset( $document ); // unset to save memory*/
+
+	return $response;
+}
+
 /*------------------------------------------------------------------------------
 # Formatting & Helper Functions
 ------------------------------------------------------------------------------*/

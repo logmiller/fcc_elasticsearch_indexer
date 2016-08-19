@@ -14,13 +14,16 @@ module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.subd
 /*------------------------------------------------------------------------------
 # Module Setup
 ------------------------------------------------------------------------------*/
-$cluster = elasticsearch_connector_cluster_load( elasticsearch_connector_get_default_connector() );
 
 # Declare Constants
-define( 'DEFAULT_CLUSTER_ID', $cluster->cluster_id ); // TODO remove once Connector module dependancy is deprecated
-define( 'ES_INDEX', fcc_es_get_cluster_index() );  // Name of the target ElasticSearch index.
-define( 'ES_URL', fcc_es_get_cluster_url() );
-define( 'ES_PORT', fcc_es_get_cluster_port() );
+//define( 'ES_INDEX', fcc_es_get_cluster_index() );  // Name of the target ElasticSearch index.
+//define( 'ES_URL', fcc_es_get_cluster_url() );
+//define( 'ES_PORT', fcc_es_get_cluster_port() );
+
+// TODO replace with variables framework
+define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index.
+define( 'ES_URL', 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242' );
+define( 'ES_PORT', '30242' );
 
 /*------------------------------------------------------------------------------
 # Node Functions
@@ -36,9 +39,11 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 	if ( ! is_object( $node ) ) {
 		return;
 	}
+	//print_r( $node . "\n" );
 
 	// Populate the document metadata
 	$params = _fcc_elasticsearch_indexer_prepare_document_metadata( $node );
+	//print_r( $params . "\n" );
 
 	// Populate the document fields based on article type
 	if ( fcc_es_is_supported_node_type( $node->type ) ) {
@@ -51,35 +56,11 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 			drush_set_error( 'Error: node type is currently unsupported.' );
 			return;
 		} else { // Drupal
-			drupal_set_message( t( 'There was a problem saving this node to Elastic - node type is currently unsupported.' ) );
+			drupal_set_message( t( 'There was a problem saving this node to Elasticsearch - node type is currently unsupported.' ) );
 		}
 	}
 
 	return $params;
-}
-
-/**
- * Helper function that returns a node from Elastic by its nid.
- *
- * @param $client
- * @param object $node
- * @return mixed
- */
-function _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node ) {
-	$search = array(
-		'index' => ES_INDEX,
-		'type' => $node->type,
-		'version' => true,
-		'body' => array(
-		  'query' => array(
-		    'match' => array(
-		      'nid' => $node->nid,
-		    ),
-		  ),
-		),
-	);
-
-	return $client->search( $search );
 }
 
 /**
@@ -88,22 +69,23 @@ function _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node ) 
  * @param object $node
  */
 function fcc_elasticsearch_indexer_node_insert( $node ) {
-	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
-	$params = _fcc_elasticsearch_indexer_prepare_node( $node );
 
-	if ( ! $params ) {
-		drupal_set_message( t( 'There was a problem saving this node to Elastic.' ) );
+	$document = _fcc_elasticsearch_indexer_prepare_node( $node );
+
+	if ( ! $document ) {
+		drupal_set_message( t( 'There was a problem saving this node to Elasticsearch. (No document provided.)' ) );
 		return;
 	}
 
-	$result = $client->index( $params );
+	$result = fcc_es_post_single( $document ); // send the index request
+
 	if ( false === $result && $result['created'] ) {
-		drupal_set_message( t( 'There was a problem saving this node to Elastic.' ) );
+		drupal_set_message( t( 'There was a problem saving this node to Elasticsearch.' ) );
 		_fcc_elasticsearch_set_single_error_log( $node, $result );
 		return;
 	}
 
-	drupal_set_message( t( 'The node has been saved to Elastic.' ) );
+	drupal_set_message( t( 'The node has been saved to Elasticsearch.' ) );
 }
 
 /**
@@ -116,39 +98,26 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 		return;
 	}
 
-	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
+	$document = _fcc_elasticsearch_indexer_prepare_node( $node );
 
-	if ( ! fcc_es_index_exists( ES_INDEX, $client ) ) {
-		drupal_set_message( t( 'There was a problem updating this node in Elastic. (Index does not exist)' ) );
-		_fcc_elasticsearch_set_single_error_log( $node, 'Index does not exist' );
-		return;
-	}
+	$result = fcc_es_query_single( $document );
 
-	$params = _fcc_elasticsearch_indexer_prepare_node( $node );
-
-	if ( ! $params ) {
-		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
-		_fcc_elasticsearch_set_single_error_log( $node, 'Parameters Error' );
-		return;
-	}
-
-	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
-	if ( 1 !== $result && $result['hits']['total'] ) {
-		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+	if ( ! $result && $result['_id'] ) {
+		drupal_set_message( t( 'There was a problem updating this node in Elasticsearch. (Matching document not found for update.)' ) );
 		_fcc_elasticsearch_set_single_error_log( $node, 'Matching document not found for update.' );
 		return;
 	}
 
-	$params['id'] = $result['hits']['hits'][0]['_id'];
-	$version = $result['hits']['hits'][0]['_version'];
-	$index = $client->index( $params );
+	$version = $result['_version'];
+	$index = fcc_es_post_single( $document ); // send the index request
+
 	if ( $index['_version'] !== $version + 1 ) {
-		drupal_set_message( t( 'There was a problem updating this node in Elastic.' ) );
+		drupal_set_message( t( 'There was a problem updating this node in Elasticsearch. (Incremented version not returned)' ) );
 		_fcc_elasticsearch_set_single_error_log( $node, 'Incremented version not returned' );
 		return;
 	}
 
-	drupal_set_message( t( 'The node has been updated in Elastic.' ) );
+	drupal_set_message( t( 'The node has been updated in Elasticsearch.' ) );
 }
 
 /**
@@ -157,55 +126,27 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
  * @param object $node
  */
 function fcc_elasticsearch_indexer_node_delete( $node ) {
-	$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
 
-	if ( ! fcc_es_index_exists( ES_INDEX, $client ) ) {
-		drupal_set_message( t( 'There was a problem deleting this node in Elastic. (Index does not exist)' ) );
-		_fcc_elasticsearch_set_single_error_log( $node, 'Index does not exist' );
-		return;
-	}
-
-	// If the node is in Elastic, remove it
-	$result = _fcc_elasticsearch_indexer_perform_node_search_by_id( $client, $node );
-	if ( 1 !== $result && $result['hits']['total'] ) {
-		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
-		_fcc_elasticsearch_set_single_error_log( $node, 'Matching document not found for deletion.' );
-		return;
-	}
-
-	$params = array(
+	$document = array(
 	  'index' => ES_INDEX,
 	  'type' => $node->type,
-	  'id' => $result['hits']['hits'][0]['_id'],
+	  'id' => $node->nid,
 	);
 
-	$result = $client->delete( $params );
+	fcc_es_delete_single( $document ); // send the delete request
+
 	if ( ! $result && $result['found'] ) {
 		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
-		_fcc_elasticsearch_set_single_error_log( $node, 'There was a problem deleting this node in Elastic.' );
+		_fcc_elasticsearch_set_single_error_log( $node, 'There was a problem deleting this node in Elasticsearch.' );
 		return;
 	}
 
-	drupal_set_message( t( 'The node has been deleted in Elastic.' ) );
+	drupal_set_message( t( 'The node has been deleted in Elasticsearch.' ) );
 }
 
 /*------------------------------------------------------------------------------
 # Error Handling and Validation
 ------------------------------------------------------------------------------*/
-
-/**
- * Verifies if a specific index exists
- *
- * @param string $index
- * @param mixed $client (optional)
- */
-function fcc_es_index_exists( $index, $client = null ) {
-	if ( ! $client ) {
-		$client = elasticsearch_connector_get_client_by_id( DEFAULT_CLUSTER_ID );
-	}
-	$index_exists = $client->indices()->exists( array( 'index' => $index ) );
-	return $index_exists;
-}
 
 /**
  * Push errors to 'elasticsearch_reindex' table.
