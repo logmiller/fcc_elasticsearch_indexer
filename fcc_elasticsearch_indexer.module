@@ -135,6 +135,9 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
  * @param object $node
  */
 function fcc_elasticsearch_indexer_node_delete( $node ) {
+	if ( ! fcc_es_is_supported_node_type( $node->type ) ) {
+		return;
+	}
 
 	$document = array(
 	  'index' => ES_INDEX,
