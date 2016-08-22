@@ -36,13 +36,14 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 		return;
 	}
 
-	// Populate the document metadata
-	$params = _fcc_elasticsearch_indexer_prepare_document_metadata( $node );
-
 	// Populate the document fields based on article type
 	if ( fcc_es_is_supported_node_type( $node->type ) ) {
+		// Populate the document metadata
+		$params = _fcc_elasticsearch_indexer_prepare_document_metadata( $node );
+		// Populate the document body fields
 		$fields = call_user_func( '_fcc_elasticsearch_indexer_prepare_' . $node->type, $node );
-		foreach ( $fields as $key => $value ) { // Add the body fields to the document metadata
+		foreach ( $fields as $key => $value ) {
+			// Add the body fields to the document metadata
 			$params['body'][ $key ] = $value;
 		}
 	} else {
