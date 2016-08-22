@@ -16,14 +16,10 @@ module_load_include( 'inc', 'fcc_elasticsearch_indexer', 'fcc_elasticsearch.subd
 ------------------------------------------------------------------------------*/
 
 # Declare Constants
-//define( 'ES_INDEX', fcc_es_get_cluster_index() );  // Name of the target ElasticSearch index.
-//define( 'ES_URL', fcc_es_get_cluster_url() );
-//define( 'ES_PORT', fcc_es_get_cluster_port() );
-
-// TODO replace with variables framework
-define( 'ES_INDEX', 'fccnn' );  // Name of the target ElasticSearch index.
-define( 'ES_URL', 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242' );
-define( 'ES_PORT', '30242' );
+define( 'ES_INDEX', fcc_es_get_cluster_index() );
+define( 'ES_URL', fcc_es_get_cluster_url() );
+define( 'ES_PORT', fcc_es_get_cluster_port() );
+define( 'ES_DEBUG', fcc_es_get_debug_mode() );
 
 /*------------------------------------------------------------------------------
 # Node Functions
@@ -39,11 +35,9 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 	if ( ! is_object( $node ) ) {
 		return;
 	}
-	//print_r( $node . "\n" );
 
 	// Populate the document metadata
 	$params = _fcc_elasticsearch_indexer_prepare_document_metadata( $node );
-	//print_r( $params . "\n" );
 
 	// Populate the document fields based on article type
 	if ( fcc_es_is_supported_node_type( $node->type ) ) {
@@ -52,11 +46,13 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
 			$params['body'][ $key ] = $value;
 		}
 	} else {
-		if ( drupal_is_cli() && function_exists( 'drush_main' ) ) { // Drush
-			drush_set_error( 'Error: node type is currently unsupported.' );
-			return;
-		} else { // Drupal
-			drupal_set_message( t( 'There was a problem saving this node to Elasticsearch - node type is currently unsupported.' ) );
+		if ( ES_DEBUG ) {
+			if ( drupal_is_cli() && function_exists( 'drush_main' ) ) { // Drush
+				drush_set_error( 'Error: node type is currently unsupported.' );
+				return;
+			} else { // Drupal
+				drupal_set_message( t( 'There was a problem saving this node to Elasticsearch - node type is currently unsupported.' ) );
+			}
 		}
 	}
 
@@ -70,22 +66,28 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
  */
 function fcc_elasticsearch_indexer_node_insert( $node ) {
 
-	$document = _fcc_elasticsearch_indexer_prepare_node( $node );
+	$document = _fcc_elasticsearch_indexer_prepare_node( $node ); // prepare the fields
 
 	if ( ! $document ) {
-		drupal_set_message( t( 'There was a problem saving this node to Elasticsearch. (No document provided.)' ) );
+		if ( ES_DEBUG ) {
+			drupal_set_message( t( 'There was a problem saving this node to Elasticsearch. (No document provided.)' ) );
+		}
 		return;
 	}
 
 	$result = fcc_es_post_single( $document ); // send the index request
 
 	if ( false === $result && $result['created'] ) {
-		drupal_set_message( t( 'There was a problem saving this node to Elasticsearch.' ) );
+		if ( ES_DEBUG ) {
+			drupal_set_message( t( 'There was a problem saving this node to Elasticsearch.' ) );
+		}
 		_fcc_elasticsearch_set_single_error_log( $node, $result );
 		return;
 	}
 
-	drupal_set_message( t( 'The node has been saved to Elasticsearch.' ) );
+	if ( ES_DEBUG ) {
+		drupal_set_message( t( 'The node has been saved to Elasticsearch.' ) );
+	}
 }
 
 /**
@@ -103,7 +105,9 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 	$result = fcc_es_query_single( $document );
 
 	if ( ! $result && $result['_id'] ) {
-		drupal_set_message( t( 'There was a problem updating this node in Elasticsearch. (Matching document not found for update.)' ) );
+		if ( ES_DEBUG ) {
+			drupal_set_message( t( 'There was a problem updating this node in Elasticsearch. (Matching document not found for update.)' ) );
+		}
 		_fcc_elasticsearch_set_single_error_log( $node, 'Matching document not found for update.' );
 		return;
 	}
@@ -112,12 +116,16 @@ function fcc_elasticsearch_indexer_node_update( $node ) {
 	$index = fcc_es_post_single( $document ); // send the index request
 
 	if ( $index['_version'] !== $version + 1 ) {
-		drupal_set_message( t( 'There was a problem updating this node in Elasticsearch. (Incremented version not returned)' ) );
+		if ( ES_DEBUG ) {
+			drupal_set_message( t( 'There was a problem updating this node in Elasticsearch. (Incremented version not returned)' ) );
+		}
 		_fcc_elasticsearch_set_single_error_log( $node, 'Incremented version not returned' );
 		return;
 	}
 
-	drupal_set_message( t( 'The node has been updated in Elasticsearch.' ) );
+	if ( ES_DEBUG ) {
+		drupal_set_message( t( 'The node has been updated in Elasticsearch.' ) );
+	}
 }
 
 /**
@@ -136,12 +144,16 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 	fcc_es_delete_single( $document ); // send the delete request
 
 	if ( ! $result && $result['found'] ) {
-		drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
+		if ( ES_DEBUG ) {
+			drupal_set_message( t( 'There was a problem deleting this node in Elastic.' ) );
+		}
 		_fcc_elasticsearch_set_single_error_log( $node, 'There was a problem deleting this node in Elasticsearch.' );
 		return;
 	}
 
-	drupal_set_message( t( 'The node has been deleted in Elasticsearch.' ) );
+	if ( ES_DEBUG ) {
+		drupal_set_message( t( 'The node has been deleted in Elasticsearch.' ) );
+	}
 }
 
 /*------------------------------------------------------------------------------
@@ -190,7 +202,7 @@ function _fcc_elasticsearch_set_single_error_log( $node, $result ) {
  * @return string
  */
 function fcc_es_get_cluster_url() {
-    return variable_get('es_url', '');
+	return variable_get( 'es_url', '' );
 }
 
 /**
@@ -199,7 +211,7 @@ function fcc_es_get_cluster_url() {
  * @return string $port
  */
 function fcc_es_get_cluster_port() {
-    return variable_get('es_port', '');
+	return variable_get( 'es_port', '' );
 }
 
 /**
@@ -209,12 +221,30 @@ function fcc_es_get_cluster_port() {
  * @return string
  */
 function fcc_es_get_cluster_index() {
-    $index = variable_get('es_index', '');
-    if (!$index) {
-        $index = 'fccnn'; // default
-    }
-    return $index;
+	$index = variable_get( 'es_index', '' );
+	if ( ! $index ) {
+		$index = 'fccnn'; // default
+	}
+	return $index;
 }
+
+/**
+ * Get the debug mode settings (on or off)
+ *
+ * @param string $index
+ * @return string
+ */
+function fcc_es_get_debug_mode() {
+	$debug_mode = variable_get( 'es_debug' );
+	if ( ! $debug_mode ) {
+		$debug_mode = null; // off by default
+	}
+	return $debug_mode;
+}
+
+/*------------------------------------------------------------------------------
+# Cluster Enviroment Presets
+------------------------------------------------------------------------------*/
 
 /**
  * Set presets from elasticsearch.
