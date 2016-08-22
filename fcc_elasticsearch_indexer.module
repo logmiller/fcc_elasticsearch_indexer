@@ -185,33 +185,12 @@ function _fcc_elasticsearch_set_single_error_log( $node, $result ) {
 ------------------------------------------------------------------------------*/
 
 /**
- * Set the cluster url used for elasticsearch.
- *
- * @param string $url
- * @return string
- */
-function fcc_es_set_cluster_url( $url ) {
-	fcc_es_set_cluster_port( $url );
-	return variable_set( 'es_url', $url );
-}
-
-/**
  * Get the cluster url used for elasticsearch.
  *
  * @return string
  */
 function fcc_es_get_cluster_url() {
-	return variable_get( 'es_url', '' );
-}
-
-/**
- * Sets the ElasticSearch Server port variable from the url address
- * @param string $url
- * @return string $port
- */
-function fcc_es_set_cluster_port( $url ) {
-	$port = preg_replace( '(.+:)', '', $url );
-	return variable_set( 'es_port', $port );
+    return variable_get('es_url', '');
 }
 
 /**
@@ -220,17 +199,7 @@ function fcc_es_set_cluster_port( $url ) {
  * @return string $port
  */
 function fcc_es_get_cluster_port() {
-	return variable_get( 'es_port', '' );
-}
-
-/**
- * Set the cluster index name used for elasticsearch.
- *
- * @param string $index
- * @return string
- */
-function fcc_es_set_cluster_index( $index ) {
-	return variable_set( 'es_index', $index );
+    return variable_get('es_port', '');
 }
 
 /**
@@ -240,9 +209,72 @@ function fcc_es_set_cluster_index( $index ) {
  * @return string
  */
 function fcc_es_get_cluster_index() {
-	$index = variable_get( 'es_index', '' );
-	if ( ! $index ) {
-		$index = 'fccnn'; // default
-	}
-	return $index;
+    $index = variable_get('es_index', '');
+    if (!$index) {
+        $index = 'fccnn'; // default
+    }
+    return $index;
+}
+
+/**
+ * Set presets from elasticsearch.
+ */
+function fcc_es_set_elasticsearch_presets() {
+    $preset = _fcc_es_get_elasticsearch_presets();
+    variable_set('es_index', $preset['index']);
+    variable_set('es_port', $preset['port']);
+    variable_set('es_url', $preset['url']);
+}
+
+/**
+ * Get presets from elasticsearch.
+ * @return type
+ */
+function _fcc_es_get_elasticsearch_presets() {
+    $environment = fcc_environment();
+    $presets = _fcc_es_elasticsearch_presets();
+
+    return $presets[$environment];
+}
+
+/**
+ * Creates the default presets for elasticsearch.
+ * @return type
+ */
+function _fcc_es_elasticsearch_presets() {
+    $modules = array(
+      'production' => array(),
+      'staging' => array(),
+      'dev' => array(),
+      'upgrade' => array(),
+      'testing' => array(),
+    );
+
+    // elasticsearch presets on production
+    $modules['production'] = array(
+      'index' => 'fccnn',
+      'port' => '30242',
+      'url' => 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242',
+    );
+
+    // elasticsearch presets on staging
+    $modules['staging'] = array(
+      'index' => 'fccnn',
+      'port' => '30242',
+      'url' => 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242',
+    );
+
+
+    // elasticsearch presets on dev
+    $modules['dev'] = array(
+      'index' => 'fccnn',
+      'port' => '9200',
+      'url' => 'http://localhost:9200',
+    );
+
+    // elasticsearch on other builds
+    $modules['upgrade'] = $modules['dev'];
+    $modules['testing'] = $modules['dev'];
+
+    return $modules;
 }

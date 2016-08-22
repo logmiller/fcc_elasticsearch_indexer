@@ -55,3 +55,10 @@ function fcc_elasticsearch_indexer_update_7001() {
     variable_set('domain_node_classified', array('DOMAIN_ACTIVE'));
     variable_set('domain_node_legals', array('DOMAIN_ACTIVE'));
 }
+
+/**
+ * Set ElasticSearch variables.
+ */
+function fcc_elasticsearch_indexer_update_7002() {
+    fcc_es_set_elasticsearch_presets();
+}
