@@ -72,6 +72,7 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'author' => fcc_es_get_author_fields( $node ),
 		'url' => fcc_es_get_url( $node ),
 		'search_thumb' => fcc_es_get_search_thumbnail( $node ),
+		'thumb_filename' => fcc_es_get_thumbnail_filename( $node ),
 		'uid' => $node->uid,
 		'name' => $node->name,
 		'picture' => $node->picture,
@@ -90,7 +91,7 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'domains' => fcc_es_get_domains_field( $node ),
 		'subdomains' => $node->subdomains,
 		'domain_site' => $node->domain_site,
-		'video' => fcc_es_get_file_fields( 'field_video', $node ), // TODO: Verify/Test
+		'video' => fcc_es_get_file_fields( 'field_video', $node ), // video thumb format: https://content.jwplatform.com/thumbs/kRPY36Gx-320.jpg
 		'audio' => fcc_es_get_file_fields( 'field_audio', $node ), // TODO: Verify/Test
 		'poll' => fcc_es_get_poll_fields( $node ), // TODO: Verify/Test
 		'google_drive_document_id' => fcc_es_get_data_field_value( 'field_google_drive_document_id', $node ),
@@ -100,8 +101,8 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'images' => fcc_es_get_image_fields( $node ),
 	);
 
-        // Unset parameters
-        unset($node);
+	// Unset parameters
+	unset( $node );
 
 	return $fields;
 }
