@@ -66,6 +66,9 @@ function _fcc_elasticsearch_indexer_prepare_node( $node ) {
  * @param object $node
  */
 function fcc_elasticsearch_indexer_node_insert( $node ) {
+	if ( 1 !== $node->status ) {
+		return; // Don't index drafts
+	}
 
 	$document = _fcc_elasticsearch_indexer_prepare_node( $node ); // prepare the fields
 
