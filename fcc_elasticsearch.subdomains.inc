@@ -183,6 +183,7 @@ function _es_get_subdomain( $domain_id ) {
 
 		default:
 			# All sites search
+			$subdomain = 'www.fccnn.com';
 			break;
 	}
         unset($domain_id); // unset domain_id
