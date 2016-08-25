@@ -211,6 +211,9 @@ function fcc_es_get_featured_image( $node ) {
  * @return array
  */
 function fcc_es_get_search_thumbnail( $node ) {
+	if ( empty( $node->field_image ) ) {
+		return; // no image on node
+	}
 
 	$uri = $node->field_image[ LANGUAGE_NONE ][0]['uri'];
 	$fid = $node->field_image[ LANGUAGE_NONE ][0]['fid'];
@@ -238,6 +241,9 @@ function fcc_es_get_search_thumbnail( $node ) {
  * @return string
  */
 function fcc_es_get_thumbnail_filename( $node ) {
+	if ( empty( $node->field_image ) ) {
+		return; // no image on node
+	}
 
 	$filename = $node->field_image[ LANGUAGE_NONE ][0]['filename'];
 	if ( empty( $filename ) ) {
