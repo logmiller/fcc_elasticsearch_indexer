@@ -169,16 +169,21 @@ function fcc_es_get_author_name($author, $node) {
     return $author_name;
 }
 
-function fcc_es_get_image_url( $uri ) {
-	$url = preg_replace('(.+(?=sites\/default\/files\/))', '', $uri);
-	//$url = preg_replace( '(https?:\/\/)', '', $uri );
-	//$url = preg_replace( '(^default)', '', $url );
-	//$url = preg_replace( '(\?q=)', '', $url );
-	$url = preg_replace( '(\itok=.+)', '', $url ); // token removal
-	$url = preg_replace( '(\?$)', '', $url ); // token removal
-	$url = preg_replace( '(\&$)', '', $url ); // token removal
-	$url = 'www.fccnn.com/' . $url; // TODO: find better or less static method?
-	return $url;
+/**
+ * Create the featured image url.
+ * @param type $uri
+ * @return string
+ */
+function fcc_es_get_image_url($uri) {
+    $url = preg_replace('(.+(?=sites\/default\/files\/))', '', $uri);
+    //$url = preg_replace( '(https?:\/\/)', '', $uri );
+    //$url = preg_replace( '(^default)', '', $url );
+    //$url = preg_replace( '(\?q=)', '', $url );
+    $url = preg_replace('(\itok=.+)', '', $url); // token removal
+    $url = preg_replace('(\?$)', '', $url); // token removal
+    $url = preg_replace('(\&$)', '', $url); // token removal
+    $url = 'www.fccnn.com/' . $url; // TODO: find better or less static method?
+    return $url;
 }
 
 /**
@@ -188,19 +193,19 @@ function fcc_es_get_image_url( $uri ) {
  * @param $node entity
  * @return array
  */
-function fcc_es_get_featured_image( $node ) {
-	$image_field = $node->field_image[ LANGUAGE_NONE ][0];
-	if ( ! empty( $image_field ) ) {
-		$image_field['full'] = fcc_es_get_image_url( file_create_url( $image_field['uri'] ) );
-		$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $image_field['uri'] ) );
-		$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $image_field['uri'] ) );
-		$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $image_field['uri'] ) );
-		$image_field['square_300'] = fcc_es_get_image_url( image_style_url( 'square_300', $image_field['uri'] ) );
-	}
-	unset( $node ); // unset parameter
-	unset( $image_field['rdf_mapping'] );
+function fcc_es_get_featured_image($node) {
+    $image_field = $node->field_image[LANGUAGE_NONE][0];
+    if (!empty($image_field)) {
+        $image_field['full'] = fcc_es_get_image_url(file_create_url($image_field['uri']));
+        $image_field['full_1000'] = fcc_es_get_image_url(image_style_url('full_1000', $image_field['uri']));
+        $image_field['16x9_860'] = fcc_es_get_image_url(image_style_url('16x9_860', $image_field['uri']));
+        $image_field['16x9_430'] = fcc_es_get_image_url(image_style_url('16x9_430', $image_field['uri']));
+        $image_field['square_300'] = fcc_es_get_image_url(image_style_url('square_300', $image_field['uri']));
+    }
+    unset($node); // unset parameter
+    unset($image_field['rdf_mapping']);
 
-	return $image_field;
+    return $image_field;
 }
 
 /**
@@ -210,28 +215,28 @@ function fcc_es_get_featured_image( $node ) {
  * @param $node entity
  * @return array
  */
-function fcc_es_get_search_thumbnail( $node ) {
-	if ( empty( $node->field_image ) ) {
-		return; // no image on node
-	}
+function fcc_es_get_search_thumbnail($node) {
+    if (empty($node->field_image)) {
+        return; // no image on node
+    }
 
-	$uri = $node->field_image[ LANGUAGE_NONE ][0]['uri'];
-	$fid = $node->field_image[ LANGUAGE_NONE ][0]['fid'];
+    $uri = $node->field_image[LANGUAGE_NONE][0]['uri'];
+    $fid = $node->field_image[LANGUAGE_NONE][0]['fid'];
 
-	if ( ! empty( $uri ) ) {
-		$search_thumb = fcc_es_get_image_url( image_style_url( 'square_300', $uri ) );
-	} else {
-		$search_thumb = fcc_es_get_image_url( image_style_url( 'square_300', file_load( $fid )->uri ) );
-	}
+    if (!empty($uri)) {
+        $search_thumb = fcc_es_get_image_url(image_style_url('square_300', $uri));
+    }
+    else {
+        $search_thumb = fcc_es_get_image_url(image_style_url('square_300', file_load($fid)->uri));
+    }
 
-	// memory managment
-	unset( $node );
-	unset( $uri );
-	unset( $fid );
+    // memory managment
+    unset($node);
+    unset($uri);
+    unset($fid);
 
-	return $search_thumb;
+    return $search_thumb;
 }
-
 
 /**
  * Retrieve the search thumbnail file name.
@@ -240,22 +245,22 @@ function fcc_es_get_search_thumbnail( $node ) {
  * @param $node entity
  * @return string
  */
-function fcc_es_get_thumbnail_filename( $node ) {
-	if ( empty( $node->field_image ) ) {
-		return; // no image on node
-	}
+function fcc_es_get_thumbnail_filename($node) {
+    if (empty($node->field_image)) {
+        return; // no image on node
+    }
 
-	$filename = $node->field_image[ LANGUAGE_NONE ][0]['filename'];
-	if ( empty( $filename ) ) {
-		$fid = $node->field_image[ LANGUAGE_NONE ][0]['fid'];
-		$filename = file_load( $fid )->filename;
-	}
+    $filename = $node->field_image[LANGUAGE_NONE][0]['filename'];
+    if (empty($filename)) {
+        $fid = $node->field_image[LANGUAGE_NONE][0]['fid'];
+        $filename = file_load($fid)->filename;
+    }
 
-	// memory managment
-	unset( $node );
-	unset( $fid );
+    // memory managment
+    unset($node);
+    unset($fid);
 
-	return $filename;
+    return $filename;
 }
 
 /**
@@ -265,36 +270,37 @@ function fcc_es_get_thumbnail_filename( $node ) {
  * @param $node entity
  * @return array
  */
-function fcc_es_get_image_fields( $node ) {
-	$field_image = $node->field_image[ LANGUAGE_NONE ];
+function fcc_es_get_image_fields($node) {
+    $field_image = $node->field_image[LANGUAGE_NONE];
 
-	$images_array = array();
-	if ( ! empty( $field_image ) ) {
-		foreach ( $field_image as $image ) {
+    $images_array = array();
+    if (!empty($field_image)) {
+        foreach ($field_image as $image) {
 
-			$image_field = $image;
-			unset( $image_field['rdf_mapping'] );
+            $image_field = $image;
+            unset($image_field['rdf_mapping']);
 
-			if ( ! empty( $image_field['uri'] ) ) {
-				$uri = $image_field['uri'];
-			} else {
-				$uri = file_load( $image_field['fid'] )->uri;
-			}
+            if (!empty($image_field['uri'])) {
+                $uri = $image_field['uri'];
+            }
+            else {
+                $uri = file_load($image_field['fid'])->uri;
+            }
 
-			$image_field['full'] = fcc_es_get_image_url( file_create_url( $uri ) );
-			$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $uri ) );
-			$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $uri ) );
-			$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $uri ) );
-			$image_field['square_200'] = fcc_es_get_image_url( image_style_url( 'square_200', $uri ) );
-			$images_array[] = $image_field;
-		}
-	}
-	unset( $node ); // unset parameter
-	unset( $field_image ); // unset image$image_field
-	unset( $image_field ); // unset image
-	unset( $uri ); // unset uri
+            $image_field['full'] = fcc_es_get_image_url(file_create_url($uri));
+            $image_field['full_1000'] = fcc_es_get_image_url(image_style_url('full_1000', $uri));
+            $image_field['16x9_860'] = fcc_es_get_image_url(image_style_url('16x9_860', $uri));
+            $image_field['16x9_430'] = fcc_es_get_image_url(image_style_url('16x9_430', $uri));
+            $image_field['square_200'] = fcc_es_get_image_url(image_style_url('square_200', $uri));
+            $images_array[] = $image_field;
+        }
+    }
+    unset($node); // unset parameter
+    unset($field_image); // unset image
+    unset($image_field); // unset image
+    unset($uri); // unset uri
 
-	return $images_array;
+    return $images_array;
 }
 
 /**
@@ -310,21 +316,28 @@ function fcc_es_get_taxonomy_terms($field, $entity) {
     $terms = NULL;
     $entity_field = $entity->{$field}[LANGUAGE_NONE];
     if (is_array($entity_field) || $entity_field instanceof Traversable) {
-        foreach ($entity_field as $tid) {
-            $term = reset(_fcc_es_entity_load('taxonomy_term', array($tid['tid'])));
+        // Create array of taxonomy ids to load
+        foreach ($entity_field as $field => $value) {
+            $tids[] = $value['tid'];
+        }
+        // Load taxonomy term entities
+        if (!empty($tids)) {
+            $term = _fcc_es_entity_load('taxonomy_term', $tids);
             //$term = taxonomy_term_load($tid['tid']);
-            if (!empty($term->tid)) {
+        }
+        // Create taxonomy terms array
+        foreach ($tids as $tid) {
+            if (!empty($term)) {
                 $terms[] = array(
-                  'tid' => $term->tid,
-                  'name' => $term->name,
+                  'tid' => $term[$tid]->tid,
+                  'name' => $term[$tid]->name,
                 );
             }
         }
+        unset($tids); // Unset taxonomy ids
         unset($term); //Unset term load
     }
 
-    unset($field); // Unset parameter
-    unset($entity); // Unset parameter
     unset($entity_field); // Unset entity field
 
     return $terms;
@@ -544,14 +557,10 @@ function fcc_es_get_classified_fields($entity) {
  * @return type
  */
 function fcc_es_get_data_field_value($field, $entity, $input = 'value') {
-    $entity_field = $entity->{$field}[LANGUAGE_NONE];
-
-    if (is_array($entity_field) || $entity_field instanceof Traversable) {
-        $value = array_shift(array_column($entity_field, $input));
+    $value = NULL;
+    if (!empty($entity->{$field})) {
+        $value = $entity->{$field}[LANGUAGE_NONE][0][$input];
     }
-
-    //Unset variables
-    unset($entity_field); //unset entity field
     return $value;
 }
 

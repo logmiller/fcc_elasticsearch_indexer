@@ -23,6 +23,7 @@ function _fcc_elasticsearch_indexer_node_article_to_documents($node_type, $offse
         $document['body'][] = call_user_func('_fcc_elasticsearch_indexer_prepare_' . $node_type, $entities[$id]); // Body Fields
         unset($meta);
     }
+    drupal_static_reset(); // clears up some memory from entities
     unset($entities); // unset entities
 
     return $document;
