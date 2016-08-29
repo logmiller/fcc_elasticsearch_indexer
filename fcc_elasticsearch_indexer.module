@@ -101,6 +101,11 @@ function fcc_elasticsearch_indexer_node_insert( $node ) {
  */
 function fcc_elasticsearch_indexer_node_update( $node ) {
 	if ( false !== $node->is_new ) {
+		return; // sanity check against new posts
+	}
+	if ( 1 !== $node->status ) {
+		 // Don't index drafts. If a node is becoming unpublished, delete it and bail.
+		fcc_elasticsearch_indexer_node_delete( $node );
 		return;
 	}
 
