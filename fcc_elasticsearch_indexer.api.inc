@@ -156,6 +156,7 @@ function fcc_es_format_bulk_body( $body ) {
  */
 function fcc_es_serialize_bulk_body( $data ) {
 	$data = json_encode( $data );
+	//$data = json_encode( $data, JSON_PARTIAL_OUTPUT_ON_ERROR ); // TODO this may mask errors, keep?
 	if ( $data === '[]' ) {
 		return '{}';
 	} else {

@@ -178,14 +178,17 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
  */
 function _fcc_elasticsearch_set_error_log( $responses ) {
 	foreach ( $responses['items'] as $items ) {
-		db_merge( 'elasticsearch_logs' )
-	      ->key( array( 'nid' => $items['index']['_id'] ) )
+		if ( $items['index']['error'] ) {
+			drush_set_error("Error in bulk insert. Please check the logs. Node: \033[31m" . $items['index']['_id'] . "\033[0m" );
+			db_merge( 'elasticsearch_logs' )
+				->key( array( 'nid' => $items['index']['_id'] ) )
 	      ->fields(array(
 					'type' => $items['index']['_type'],
 					'log_time' => REQUEST_TIME,
 					'message' => json_encode( $items['index']['error'] ),
 					))
 					->execute();
+		}
 	}
 }
 
