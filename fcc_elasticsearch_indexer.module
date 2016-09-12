@@ -179,15 +179,15 @@ function fcc_elasticsearch_indexer_node_delete( $node ) {
 function _fcc_elasticsearch_set_error_log( $responses ) {
 	foreach ( $responses['items'] as $items ) {
 		if ( $items['index']['error'] ) {
-			drush_set_error("Error in bulk insert. Please check the logs. Node: \033[31m" . $items['index']['_id'] . "\033[0m" );
+			drush_set_error( "Error in bulk insert. Please check the logs. Node: \033[31m" . $items['index']['_id'] . "\033[0m" );
 			db_merge( 'elasticsearch_logs' )
-				->key( array( 'nid' => $items['index']['_id'] ) )
-	      ->fields(array(
-					'type' => $items['index']['_type'],
-					'log_time' => REQUEST_TIME,
-					'message' => json_encode( $items['index']['error'] ),
-					))
-					->execute();
+					->key( array( 'nid' => $items['index']['_id'] ) )
+		      ->fields( array(
+						'type' => $items['index']['_type'],
+						'log_time' => REQUEST_TIME,
+						'message' => json_encode( $items['index']['error'] ),
+						))
+						->execute();
 		}
 	}
 }
@@ -265,10 +265,10 @@ function fcc_es_get_debug_mode() {
  * Set presets from elasticsearch.
  */
 function fcc_es_set_elasticsearch_presets() {
-    $preset = _fcc_es_get_elasticsearch_presets();
-    variable_set('es_index', $preset['index']);
-    variable_set('es_port', $preset['port']);
-    variable_set('es_url', $preset['url']);
+	$preset = _fcc_es_get_elasticsearch_presets();
+	variable_set( 'es_index', $preset['index'] );
+	variable_set( 'es_port', $preset['port'] );
+	variable_set( 'es_url', $preset['url'] );
 }
 
 /**
@@ -276,10 +276,10 @@ function fcc_es_set_elasticsearch_presets() {
  * @return type
  */
 function _fcc_es_get_elasticsearch_presets() {
-    $environment = fcc_environment();
-    $presets = _fcc_es_elasticsearch_presets();
+	$environment = fcc_environment();
+	$presets = _fcc_es_elasticsearch_presets();
 
-    return $presets[$environment];
+	return $presets[ $environment ];
 }
 
 /**
@@ -287,39 +287,40 @@ function _fcc_es_get_elasticsearch_presets() {
  * @return type
  */
 function _fcc_es_elasticsearch_presets() {
-    $modules = array(
-      'production' => array(),
-      'staging' => array(),
-      'dev' => array(),
-      'upgrade' => array(),
-      'testing' => array(),
-    );
+	$modules = array(
+	  'production' => array(),
+	  'staging' => array(),
+		'testing' => array(),
+	  'dev' => array(),
+	);
 
-    // elasticsearch presets on production
-    $modules['production'] = array(
-      'index' => 'fccnn',
-      'port' => '30242',
-      'url' => 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242',
-    );
+	// elasticsearch presets on production
+	$modules['production'] = array(
+	  'index' => 'fccnn',
+	  'port' => '30242',
+	  'url' => 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242',
+	);
 
-    // elasticsearch presets on staging
-    $modules['staging'] = array(
-      'index' => 'fccnn',
-      'port' => '30242',
-      'url' => 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242',
-    );
+	// elasticsearch presets on staging
+	$modules['staging'] = array(
+	  'index' => 'fccnn-staging',
+	  'port' => '30242',
+	  'url' => 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242',
+	);
 
+	// elasticsearch presets on testing / upgrade testing
+	$modules['testing'] = array(
+	  'index' => 'fccnn-testing',
+	  'port' => '30242',
+	  'url' => 'https://3590b9d403c87e0697b6:8c2e5209a1@f08f4b1b.qb0x.com:30242',
+	);
 
-    // elasticsearch presets on dev
-    $modules['dev'] = array(
-      'index' => 'fccnn',
-      'port' => '9200',
-      'url' => 'http://localhost:9200',
-    );
+	// elasticsearch presets on dev
+	$modules['dev'] = array(
+	  'index' => 'fccnn',
+	  'port' => '9200',
+	  'url' => 'http://localhost:9200',
+	);
 
-    // elasticsearch on other builds
-    $modules['upgrade'] = $modules['dev'];
-    $modules['testing'] = $modules['dev'];
-
-    return $modules;
+	return $modules;
 }

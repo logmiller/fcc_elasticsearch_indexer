@@ -3,8 +3,36 @@ ElasticSearch Indexing module for Drupal 7
 
 ### Setup
 Custer settings are stored as variables in Drupal.
-- `drush vset es_index fccnn` Set the Cluster Index Name
-- `drush vset es_index {{cluster url}}` Set the Cluster Index URL
+
+#### Get the cluster variable settings:
+`drush php-eval 'print_r(_fcc_es_get_elasticsearch_presets());'` - Returns a settings array.
+
+#### Set, update or override the cluster variable settings:
+- `drush vset es_index {{index name}}` Set the Cluster Index Name
+- `drush vset es_url {{cluster url}}` Set the Cluster Index URL
+- `drush vset es_port {{cluster port}}` Set the Cluster Index URL
+
+#### Cluster Environment Default Settings
+
+**Production**:
+- Index Name: `fccnn`
+- Port: {{port}}
+- URL: {{url}}
+
+**Staging**:
+- Index Name: `fccnn-staging`
+- Port: {{port}}
+- URL: {{url}}
+
+**Testing / Upgrade Testing**:
+- Index Name: `fccnn-testing`
+- Port: {{port}}
+- URL: {{url}}
+
+**Dev / Local**:
+- Index Name: `fccnn`
+- Port: `9200`
+- URL: `http://localhost:9200`
 
 ### Indexing
 
