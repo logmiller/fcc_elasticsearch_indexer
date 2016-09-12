@@ -3,9 +3,8 @@
 /**
  * cURL commands for ElasticSearch data retrieval.
  */
-/*
 
-  /**
+/**
  * Request node from ElasticSearch.
  * @param type $nids
  *  An array of node ids.
@@ -28,6 +27,104 @@ function _fcc_es_connect_search_nodes_by_id($nids, $fields = FALSE) {
           '_id' => $nids,
     ))));
 
+    return _fcc_es_connect_post_curl($postfields);
+}
+
+/**
+ * Request the latest nodes from ElasticSearch by type.
+ *
+ * @param type $type
+ * @param type $limit
+ * @param type $offset
+ * @param type $fields
+ * @return type
+ */
+function _fcc_es_connect_get_latest_nodes_by_type($type = 'article', $limit = 15, $offset = 0, $fields = FALSE) {
+    //$fields = array('nid', 'title', 'post_date', 'revision_timestamp', 'published');
+
+    $postfields = json_encode(array(
+      '_source' => ($fields) ? $fields : [],
+      'sort' => array('post_date' => array('order' => 'asc')),
+      'from' => $offset,
+      'size' => $limit,
+      'query' => array(
+        'constant_score' => array(
+          'filter' => array(
+            'bool' => array(
+              'must' => array(
+                'term' => array('_type' => 'article'),
+                'term' => array('domains' => 15),
+              ),
+            ))),
+      ),
+    ));
+
+    return _fcc_es_connect_post_curl($postfields);
+}
+
+/**
+ * Request the latest nodes from ElasticSearch by category id.
+ *
+ * @param type $tid
+ * @param type $limit
+ * @param type $offset
+ * @param type $fields
+ * @return type
+ */
+function _fcc_es_connect_get_latest_nodes_by_tid($tid = 1, $limit = 15, $offset = 0, $fields = FALSE) {
+    //$fields = array('nid', 'title', 'post_date', 'revision_timestamp', 'published');
+
+    $postfields = json_encode(array(
+      '_source' => ($fields) ? $fields : [],
+      'sort' => array('post_date' => array('order' => 'asc')),
+      'from' => $offset,
+      'size' => $limit,
+      'query' => array(
+        'constant_score' => array(
+          'filter' => array(
+            'bool' => array(
+              'must' => array(
+                'term' => array('category.tid' => $tid),
+                'term' => array('domains' => 15),
+              ),
+            ))),
+      ),
+    ));
+
+    return _fcc_es_connect_post_curl($postfields);
+}
+
+/**
+ * Construct queries for Elastic Search.
+ */
+function _fcc_es_connect_make_url() {
+
+    $es_url = variable_get('es_url', '');
+    if (!$es_url) {
+        $es_url = ES_URL;
+    }
+
+    $es_index = variable_get('es_index', '');
+    if (!$es_index) {
+        $es_index = ES_INDEX;
+    }
+
+    $search = array(
+      'url' => $es_url,
+      'index' => $es_index,
+    );
+
+    $query = $search['url'] . '/' . $search['index'] . '/_search';
+
+    return $query;
+}
+
+/**
+ * cURL post command for ElasticSearch.
+ * @param type $postfields
+ * @return type
+ */
+function _fcc_es_connect_post_curl($postfields) {
     $curl = curl_init();
 
     curl_setopt_array($curl, array(
@@ -54,31 +151,6 @@ function _fcc_es_connect_search_nodes_by_id($nids, $fields = FALSE) {
         echo "cURL Error #:" . $err;
     }
     else {
-        return $response;
+        return json_decode($response);
     }
-}
-
-/**
- * Construct queries for Elastic Search.
- */
-function _fcc_es_connect_make_url() {
-
-    $es_url = variable_get('es_url', '');
-    if (!$es_url) {
-        $es_url = ES_URL;
-    }
-
-    $es_index = variable_get('es_index', '');
-    if (!$es_index) {
-        $es_index = ES_INDEX;
-    }
-
-    $search = array(
-      'url' => $es_url,
-      'index' => $es_index,
-    );
-
-    $query = $search['url'] . '/' . $search['index'] . '/_search';
-
-    return $query;
 }
