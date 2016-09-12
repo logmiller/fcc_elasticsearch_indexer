@@ -52,7 +52,7 @@ function _fcc_es_connect_get_latest_nodes_by_type($type = 'article', $limit = 15
           'filter' => array(
             'bool' => array(
               'must' => array(
-                'term' => array('_type' => 'article'),
+                'term' => array('_type' => $type),
                 'term' => array('domains' => 15),
               ),
             ))),
