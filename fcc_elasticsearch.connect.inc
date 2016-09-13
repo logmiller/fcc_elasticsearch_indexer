@@ -12,7 +12,7 @@
  *  An array of fields, or FALSE to load all the fields.
  * @return type
  */
-function _fcc_es_connect_search_nodes_by_id($nids, $fields = FALSE) {
+function _fcc_es_connect_post_nodes_by_id($nids, $fields = FALSE) {
 
     //ELASTICSEARCH: QUERY
     if (empty($nids)) {
@@ -39,12 +39,11 @@ function _fcc_es_connect_search_nodes_by_id($nids, $fields = FALSE) {
  * @param type $fields
  * @return type
  */
-function _fcc_es_connect_get_latest_nodes_by_type($type = 'article', $limit = 15, $offset = 0, $fields = FALSE) {
-    //$fields = array('nid', 'title', 'post_date', 'revision_timestamp', 'published');
+function _fcc_es_connect_post_latest_nodes_by_type($type = 'article', $limit = 15, $offset = 0, $fields = FALSE) {
 
     $postfields = json_encode(array(
       '_source' => ($fields) ? $fields : [],
-      'sort' => array('post_date' => array('order' => 'asc')),
+      'sort' => array('published' => array('order' => 'desc')),
       'from' => $offset,
       'size' => $limit,
       'query' => array(
@@ -71,12 +70,10 @@ function _fcc_es_connect_get_latest_nodes_by_type($type = 'article', $limit = 15
  * @param type $fields
  * @return type
  */
-function _fcc_es_connect_get_latest_nodes_by_tid($tid = 1, $limit = 15, $offset = 0, $fields = FALSE) {
-    //$fields = array('nid', 'title', 'post_date', 'revision_timestamp', 'published');
-
+function _fcc_es_connect_post_latest_nodes_by_tid($tid = 1, $limit = 15, $offset = 0, $fields = FALSE) {
     $postfields = json_encode(array(
       '_source' => ($fields) ? $fields : [],
-      'sort' => array('post_date' => array('order' => 'asc')),
+      'sort' => array('published' => array('order' => 'desc')),
       'from' => $offset,
       'size' => $limit,
       'query' => array(
