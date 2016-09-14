@@ -81,7 +81,7 @@ function fcc_es_get_excerpt( $node ) {
 	} elseif ( $body['safe_value'] ) {
 		$excerpt_field = $body['safe_value'];
 	} elseif ( $body['value'] ) {
-		$excerpt_field = $body_fields['value'];
+		$excerpt_field = $body['value'];
 	} else {
 		$excerpt_field = '';
 	}
@@ -123,7 +123,6 @@ function fcc_es_get_excerpt( $node ) {
 	}
 
 	unset( $body ); // unset parameters
-	unset( $safe_value ); // unset parameters
 	unset( $node ); // unset parameters
 
 	return $excerpt_field;
@@ -328,26 +327,31 @@ function fcc_es_get_featured_image( $node ) {
  * @param $node entity
  * @return array
  */
-function fcc_es_get_search_thumbnail( $node ) {
-	if ( empty( $node->field_image ) ) {
-	    return; // no image on node
-	}
+function fcc_es_get_search_thumbnail($node) {
+        if (empty($node->field_image)) {
+            return; // no image on node
+        }
 
-	$uri = $node->field_image[ LANGUAGE_NONE ][0]['uri'];
-	$fid = $node->field_image[ LANGUAGE_NONE ][0]['fid'];
+        $uri = $node->field_image[LANGUAGE_NONE][0]['uri'];
+        $fid = $node->field_image[LANGUAGE_NONE][0]['fid'];
 
-	if ( ! empty( $uri ) ) {
-		$search_thumb = fcc_es_get_image_url( image_style_url( 'square_300', $uri ) );
-	} else {
-		$search_thumb = fcc_es_get_image_url( image_style_url( 'square_300', file_load( $fid )->uri ) );
-	}
+        if (empty($fid)) {
+            return; // no image on node
+        }
 
-	// memory managment
-	unset( $node );
-	unset( $uri );
-	unset( $fid );
+        if (!empty($uri)) {
+            $search_thumb = fcc_es_get_image_url(image_style_url('square_300', $uri));
+        }
+        else {
+            $search_thumb = fcc_es_get_image_url(image_style_url('square_300', file_load($fid)->uri));
+        }
 
-	return $search_thumb;
+        // memory managment
+        unset($node);
+        unset($uri);
+        unset($fid);
+
+        return $search_thumb;
 }
 
 /**
@@ -365,6 +369,9 @@ function fcc_es_get_thumbnail_filename( $node ) {
 	$filename = $node->field_image[ LANGUAGE_NONE ][0]['filename'];
 	if ( empty( $filename ) ) {
 		$fid = $node->field_image[ LANGUAGE_NONE ][0]['fid'];
+                if(empty($fid)) {
+                    return; // no image on node
+                }
 		$filename = file_load( $fid )->filename;
 	}
 
@@ -383,35 +390,40 @@ function fcc_es_get_thumbnail_filename( $node ) {
  * @param $node entity
  * @return array
  */
-function fcc_es_get_image_fields( $node ) {
-	$field_image = $node->field_image[ LANGUAGE_NONE ];
+function fcc_es_get_image_fields($node) {
+        $field_image = $node->field_image[LANGUAGE_NONE];
 
-	$images_array = array();
-	if ( ! empty( $field_image ) ) {
-		foreach ( $field_image as $image ) {
-		    $image_field = $image;
-		    unset( $image_field['rdf_mapping'] );
+        if ( !($field_image instanceof \Traversable) ) {
+            return; // no image on node
+        }
 
-		    if ( ! empty( $image_field['uri'] ) ) {
-					$uri = $image_field['uri'];
-		    } else {
-					$uri = file_load( $image_field['fid'] )->uri;
-		    }
+        $images_array = array();
+        if (!empty($field_image)) {
+            foreach ($field_image as $image) {
+                $image_field = $image;
+                unset($image_field['rdf_mapping']);
 
-				$image_field['full'] = fcc_es_get_image_url( file_create_url( $uri ) );
-				$image_field['full_1000'] = fcc_es_get_image_url( image_style_url( 'full_1000', $uri ) );
-				$image_field['16x9_860'] = fcc_es_get_image_url( image_style_url( '16x9_860', $uri ) );
-				$image_field['16x9_430'] = fcc_es_get_image_url( image_style_url( '16x9_430', $uri ) );
-				$image_field['square_200'] = fcc_es_get_image_url( image_style_url( 'square_200', $uri ) );
-				$images_array[] = $image_field;
-		}
-	}
-	unset( $node ); // unset parameter
-	unset( $field_image ); // unset image
-	unset( $image_field ); // unset image
-	unset( $uri ); // unset uri
+                if (!empty($image_field['uri'])) {
+                    $uri = $image_field['uri'];
+                }
+                else {
+                    $uri = file_load($image_field['fid'])->uri;
+                }
 
-	return $images_array;
+                $image_field['full'] = fcc_es_get_image_url(file_create_url($uri));
+                $image_field['full_1000'] = fcc_es_get_image_url(image_style_url('full_1000', $uri));
+                $image_field['16x9_860'] = fcc_es_get_image_url(image_style_url('16x9_860', $uri));
+                $image_field['16x9_430'] = fcc_es_get_image_url(image_style_url('16x9_430', $uri));
+                $image_field['square_200'] = fcc_es_get_image_url(image_style_url('square_200', $uri));
+                $images_array[] = $image_field;
+            }
+        }
+        unset($node); // unset parameter
+        unset($field_image); // unset image
+        unset($image_field); // unset image
+        unset($uri); // unset uri
+
+        return $images_array;
 }
 
 /**
