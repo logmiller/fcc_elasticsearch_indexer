@@ -25,7 +25,7 @@ function fcc_es_get_body_fields( $node ) {
 	} elseif ( $body['safe_value'] ) {
 		$body_fields['value'] = $body['safe_value'];
 	} else {
-		$body_fields['value'] = ''; // admit defeat and set an empty value
+		$body_fields['value'] = null; // admit defeat
 	}
 
 	# body.summary
@@ -34,7 +34,7 @@ function fcc_es_get_body_fields( $node ) {
 	} elseif ( $body['safe_summary'] ) {
 		$body_fields['summary'] = $body['safe_summary'];
 	} else {
-		$body_fields['summary'] = ''; // admit defeat and set an empty value
+		$body_fields['summary'] = null; // admit defeat
 	}
 
 	# body.safe_value
@@ -43,7 +43,7 @@ function fcc_es_get_body_fields( $node ) {
 	} elseif ( $body['value'] ) {
 		$body_fields['safe_value'] = str_replace( chr( 194 ) . chr( 160 ), '', strip_tags( $body['value'] ) ); // if safe_value isn't populated, generate from body.value
 	} else {
-		$body_fields['safe_value'] = ''; // admit defeat and set an empty value
+		$body_fields['safe_value'] = null; // admit defeat
 	}
 
 	# body.safe_summary
@@ -52,7 +52,7 @@ function fcc_es_get_body_fields( $node ) {
 	} elseif ( $body['summary'] ) {
 		$body_fields['safe_summary'] = strip_tags( $body_fields['summary'] );
 	} else {
-		$body_fields['safe_summary'] = ''; // admit defeat and set an empty value
+		$body_fields['safe_summary'] = null; // admit defeat
 	}
 
 	# body.format
@@ -83,7 +83,7 @@ function fcc_es_get_excerpt( $node ) {
 	} elseif ( $body['value'] ) {
 		$excerpt_field = $body['value'];
 	} else {
-		$excerpt_field = '';
+		$excerpt_field = null;
 	}
 
 	# Format the text
@@ -113,13 +113,8 @@ function fcc_es_get_excerpt( $node ) {
 		}
 
 		if ( substr( $excerpt_field, -1 ) !== '.' ) {
-			//$excerpt_field = urldecode( rtrim( urlencode( $excerpt_field ) ) );
 			$excerpt_field = substr_replace( $excerpt_field, '...', 246 );
-			//$excerpt_field = substr( $excerpt_field, 0, 247 ) . '...' ;
 		}
-
-		//print_r( $excerpt_field . "\n\n" ); // TODO: remove (used for debugging)
-
 	}
 
 	unset( $body ); // unset parameters
