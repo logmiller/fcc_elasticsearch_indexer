@@ -95,7 +95,7 @@ function _fcc_elasticsearch_indexer_prepare_article( $node ) {
 		'video' => fcc_es_get_file_fields( 'field_video', $node ),
 		'audio' => fcc_es_get_file_fields( 'field_audio', $node ),
 		'poll' => fcc_es_get_poll_fields( $node ),
-		'google_drive_document_id' => fcc_es_get_data_field_value( 'field_google_drive_document_id', $node ),
+		//'map' => fcc_es_get_map_fields( $node ), // TODO - add this
 		'body' => fcc_es_get_body_fields( $node ),
 		'category' => fcc_es_get_taxonomy_terms( 'field_category', $node ),
 		'tags' => fcc_es_get_taxonomy_terms( 'field_tags', $node ),
