@@ -106,7 +106,7 @@ function _es_get_subdomain( $domain_id ) {
 			break;
 
 		case '25':
-			$subdomain = 'www.prairiebizmag.com';
+			$subdomain = 'www.prairiebusinessmagazine.com';
 			break;
 
 		case '26':
@@ -146,7 +146,7 @@ function _es_get_subdomain( $domain_id ) {
 			break;
 
 		case '35':
-			$subdomain = 'www.twoharborsmn.com';
+			$subdomain = 'www.lcnewschronicle.com';
 			break;
 
 		case '36':
