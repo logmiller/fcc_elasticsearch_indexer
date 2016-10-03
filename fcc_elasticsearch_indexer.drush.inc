@@ -102,7 +102,7 @@ function _drush_elastic_search_batch_indexing_create($node_type, $limit, $offset
 
                 // indexing success/fail response from elasticsearch
                 if ($responses['errors'] > 0) {
-									_fcc_elasticsearch_set_error_log($responses);
+                    _fcc_elasticsearch_set_error_log($responses);
                 }
 
                 $offset += $batch_size;

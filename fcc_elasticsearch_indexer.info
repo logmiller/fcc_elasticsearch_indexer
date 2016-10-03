@@ -3,7 +3,6 @@ description = Elasticsearch Indexing module for Drupal 7.
 version = 1.0.3-16.09.14
 core = 7.x
 ; required
-files[] = fcc_elasticsearch.index.inc
 files[] = fcc_elasticsearch.types.inc
 files[] = fcc_elasticsearch_indexer.prepare.inc
 files[] = fcc_elasticsearch_indexer.fields.inc
